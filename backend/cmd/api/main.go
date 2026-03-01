@@ -61,12 +61,7 @@ func main() {
         &models.Comment{},
         &models.Like{},
         &models.Tag{},
-        &models.Follow{},
-        &models.TopicFollow{},
-        &models.SavedPost{},
-        &models.Notification{},
-        &models.Report{},
-        &models.ActivityLog{},
+   
     )
     if err != nil {
         log.Fatal("Failed to migrate database:", err)

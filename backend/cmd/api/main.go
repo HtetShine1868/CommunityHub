@@ -3,7 +3,7 @@ package main
 import (
     "communityHub/internal/handlers"
     "communityHub/internal/middleware"
-    "communityHub/internal/models" // <-- ADD THIS IMPORT
+    "communityHub/internal/models"
     "communityHub/internal/repository"
     "fmt"
     "log"
@@ -52,21 +52,53 @@ func main() {
 
     fmt.Println("✅ Connected to PostgreSQL successfully!")
 
-    // ===== ADDED: RUN MIGRATIONS =====
+    // ===== RUN MIGRATIONS IN CORRECT ORDER =====
     fmt.Println("🔄 Running database migrations...")
-    err = db.AutoMigrate(
+
+    // Step 1: Migrate independent tables (no foreign keys)
+    if err := db.AutoMigrate(
         &models.User{},
+        &models.Tag{},
+    ); err != nil {
+        log.Fatal("Failed to migrate independent tables:", err)
+    }
+    fmt.Println("✅ Step 1: Users and Tags migrated")
+
+    // Step 2: Migrate tables that depend on users only
+    if err := db.AutoMigrate(
         &models.Topic{},
+    ); err != nil {
+        log.Fatal("Failed to migrate topics:", err)
+    }
+    fmt.Println("✅ Step 2: Topics migrated")
+
+    // Step 3: Migrate posts (depends on users and topics)
+    if err := db.AutoMigrate(
         &models.Post{},
+    ); err != nil {
+        log.Fatal("Failed to migrate posts:", err)
+    }
+    fmt.Println("✅ Step 3: Posts migrated")
+
+    // Step 4: Create the join table explicitly
+    if err := db.AutoMigrate(
+        &models.PostTag{},
+    ); err != nil {
+        log.Fatal("Failed to create post_tags table:", err)
+    }
+    fmt.Println("✅ Step 4: PostTags join table created")
+
+    // Step 5: Migrate comments and likes (depend on posts)
+    if err := db.AutoMigrate(
         &models.Comment{},
         &models.Like{},
-        &models.Tag{},
-    )
-    if err != nil {
-        log.Fatal("Failed to migrate database:", err)
+    ); err != nil {
+        log.Fatal("Failed to migrate comments and likes:", err)
     }
-    fmt.Println("✅ Database migrations complete")
-    // ===== END OF ADDED SECTION =====
+    fmt.Println("✅ Step 5: Comments and Likes migrated")
+
+    fmt.Println("✅ All database migrations complete")
+    // ===== END OF MIGRATIONS =====
 
     // Initialize repositories
     userRepo := repository.NewUserRepository(db)
@@ -92,7 +124,7 @@ func main() {
         AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
         AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
         AllowCredentials: true,
-        ExposedHeaders:   []string{"Content-Length"},
+        ExposedHeaders:   []string{"Set-Cookie", "Content-Length"},
         MaxAge:           86400,
     })
     router.Use(func(c *gin.Context) {
@@ -151,6 +183,9 @@ func main() {
     }
 
     fmt.Printf("🚀 Server starting on port %s\n", port)
+    fmt.Printf("📝 API available at http://localhost:%s/api\n", port)
+    fmt.Printf("🌐 Allowed origins: %v\n", allowedOrigins)
+
     if err := router.Run(":" + port); err != nil {
         log.Fatal("Failed to start server:", err)
     }

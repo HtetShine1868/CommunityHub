@@ -34,9 +34,6 @@ type PostResponse struct {
     ID           string         `json:"id"`
     Title        string         `json:"title"`
     Content      string         `json:"content"`
-    ContentHTML  string         `json:"contentHtml,omitempty"`
-    Excerpt      string         `json:"excerpt,omitempty"`
-    CoverImage   string         `json:"coverImage,omitempty"`
     ViewCount    int            `json:"viewCount"`
     IsPinned     bool           `json:"isPinned"`
     IsLocked     bool           `json:"isLocked"`
@@ -271,7 +268,6 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "post deleted successfully"})
 }
 
-// TogglePin pins or unpins a post (admin/moderator only)
 func (h *PostHandler) TogglePin(c *gin.Context) {
     id, err := uuid.Parse(c.Param("id"))
     if err != nil {
@@ -279,7 +275,7 @@ func (h *PostHandler) TogglePin(c *gin.Context) {
         return
     }
 
-    // Check if user is admin/moderator (you'll need to implement this)
+
     userRole := c.GetString("role")
     if userRole != "admin" && userRole != "moderator" {
         c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
@@ -302,7 +298,7 @@ func (h *PostHandler) ToggleLock(c *gin.Context) {
         return
     }
 
-    // Check if user is admin/moderator
+   
     userRole := c.GetString("role")
     if userRole != "admin" && userRole != "moderator" {
         c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
@@ -317,7 +313,6 @@ func (h *PostHandler) ToggleLock(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "post lock toggled successfully"})
 }
 
-// GetPopularPosts returns the most viewed posts
 func (h *PostHandler) GetPopularPosts(c *gin.Context) {
     limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
@@ -327,7 +322,7 @@ func (h *PostHandler) GetPopularPosts(c *gin.Context) {
         return
     }
 
-    // Get current user ID from context if authenticated
+ 
     userIDStr, exists := c.Get("userID")
     var currentUserID uuid.UUID
     if exists && userIDStr != nil {
@@ -369,11 +364,10 @@ func (h *PostHandler) GetRecentPosts(c *gin.Context) {
 
 // buildPostResponse creates a response with like information
 func (h *PostHandler) buildPostResponse(post models.Post, currentUserID uuid.UUID) PostResponse {
-    // Get like count
+
     var likeCount int64
     h.db.Model(&models.Like{}).Where("post_id = ?", post.ID).Count(&likeCount)
 
-    // Check if current user liked this post
     liked := false
     if currentUserID != uuid.Nil {
         var like models.Like
@@ -381,7 +375,7 @@ func (h *PostHandler) buildPostResponse(post models.Post, currentUserID uuid.UUI
         liked = err == nil
     }
 
-    // Get comment count
+
     var commentCount int64
     h.db.Model(&models.Comment{}).Where("post_id = ?", post.ID).Count(&commentCount)
 
@@ -389,9 +383,6 @@ func (h *PostHandler) buildPostResponse(post models.Post, currentUserID uuid.UUI
         ID:           post.ID.String(),
         Title:        post.Title,
         Content:      post.Content,
-        ContentHTML:  post.ContentHTML,
-        Excerpt:      post.Excerpt,
-        CoverImage:   post.CoverImage,
         ViewCount:    post.ViewCount,
         IsPinned:     post.IsPinned,
         IsLocked:     post.IsLocked,

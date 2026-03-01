@@ -19,8 +19,7 @@ import {
   MoreVert,
   Edit,
   Delete,
-  Favorite,
-  Comment,
+
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Topic } from '../../types/topic.types';

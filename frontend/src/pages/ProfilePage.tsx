@@ -10,12 +10,10 @@ import {
   Divider,
   Tab,
   Tabs,
-  Card,
-  CardContent,
+
 } from '@mui/material';
 import { useAuthStore } from '../store/authStore';
-import { usePosts } from '../hooks/usePosts';
-import PostCard from '../components/posts/PostCard';
+
 
 interface TabPanelProps {
   children?: React.ReactNode;

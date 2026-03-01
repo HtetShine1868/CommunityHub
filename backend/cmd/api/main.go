@@ -122,4 +122,5 @@ func main() {
     if err := router.Run(":" + port); err != nil {
         log.Fatal("Failed to start server:", err)
     }
+      router.Run(":" + port)
 }

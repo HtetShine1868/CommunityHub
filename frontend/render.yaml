@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: community-hub-frontend
+    runtime: static
+    region: singapore
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false  # Will set manually

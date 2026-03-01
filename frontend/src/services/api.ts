@@ -1,22 +1,38 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  withCredentials: true, // CRITICAL for cookies/auth
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Response interceptor for error handling
-api.interceptors.response.use(
-  (response) => response,
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`🌐 Making ${config.method?.toUpperCase()} request to ${config.url}`);
+    return config;
+  },
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized - clear store and redirect to login
-      console.log('Unauthorized access');
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log(`✅ Response received:`, response.data);
+    return response;
+  },
+  (error) => {
+    console.error(`❌ Request failed:`, error.message);
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', error.response.data);
     }
     return Promise.reject(error);
   }

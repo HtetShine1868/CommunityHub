@@ -7,7 +7,7 @@ import (
     "fmt"
     "log"
     "os"
-
+    "strings"
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
     "github.com/rs/cors"
@@ -16,10 +16,28 @@ import (
 )
 
 func main() {
-    // Load .env file
+
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found, using environment variables")
     }
+
+    frontendURL := os.Getenv("FRONTEND_URL")
+    if frontendURL == "" {
+        frontendURL = "https://communityhub-1-8f9q.onrender.com" 
+    }
+        allowedOrigins := []string{
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        frontendURL,
+    }
+
+    if envOrigins := os.Getenv("ALLOWED_ORIGINS"); envOrigins != "" {
+        allowedOrigins = append(allowedOrigins, strings.Split(envOrigins, ",")...)
+    }
+
+    fmt.Println("🔌 Connecting to database...")
 
     dsn := os.Getenv("DATABASE_URL")
     if dsn == "" {
@@ -55,12 +73,13 @@ func main() {
 
     // CORS configuration
     corsConfig := cors.New(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:5173"},
-        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization"},
-        AllowCredentials: true,
+        AllowedOrigins:   allowedOrigins,
+        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+        AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+        AllowCredentials: true, 
+        ExposedHeaders:   []string{"Content-Length"},
+        MaxAge:           86400, 
     })
-
     router.Use(func(c *gin.Context) {
         corsConfig.HandlerFunc(c.Writer, c.Request)
         c.Next()

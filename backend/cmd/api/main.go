@@ -52,54 +52,6 @@ func main() {
 
     fmt.Println("✅ Connected to PostgreSQL successfully!")
 
-    // ===== RUN MIGRATIONS IN CORRECT ORDER =====
-    fmt.Println("🔄 Running database migrations...")
-
-    // Step 1: Migrate independent tables (no foreign keys)
-    if err := db.AutoMigrate(
-        &models.User{},
-        &models.Tag{},
-    ); err != nil {
-        log.Fatal("Failed to migrate independent tables:", err)
-    }
-    fmt.Println("✅ Step 1: Users and Tags migrated")
-
-    // Step 2: Migrate tables that depend on users only
-    if err := db.AutoMigrate(
-        &models.Topic{},
-    ); err != nil {
-        log.Fatal("Failed to migrate topics:", err)
-    }
-    fmt.Println("✅ Step 2: Topics migrated")
-
-    // Step 3: Migrate posts (depends on users and topics)
-    if err := db.AutoMigrate(
-        &models.Post{},
-    ); err != nil {
-        log.Fatal("Failed to migrate posts:", err)
-    }
-    fmt.Println("✅ Step 3: Posts migrated")
-
-    // Step 4: Create the join table explicitly
-    if err := db.AutoMigrate(
-        &models.PostTag{},
-    ); err != nil {
-        log.Fatal("Failed to create post_tags table:", err)
-    }
-    fmt.Println("✅ Step 4: PostTags join table created")
-
-    // Step 5: Migrate comments and likes (depend on posts)
-    if err := db.AutoMigrate(
-        &models.Comment{},
-        &models.Like{},
-    ); err != nil {
-        log.Fatal("Failed to migrate comments and likes:", err)
-    }
-    fmt.Println("✅ Step 5: Comments and Likes migrated")
-
-    fmt.Println("✅ All database migrations complete")
-    // ===== END OF MIGRATIONS =====
-
     // Initialize repositories
     userRepo := repository.NewUserRepository(db)
     topicRepo := repository.NewTopicRepository(db)

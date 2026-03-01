@@ -1,20 +1,25 @@
 import axios from 'axios';
 
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, 
+  withCredentials: true, // Keep for cookies if needed
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Request interceptor - add token to every request
 api.interceptors.request.use(
   (config) => {
-    console.log(`🌐 Making ${config.method?.toUpperCase()} request to ${config.url}`);
-      console.log('📤 With credentials:', config.withCredentials);
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`);
+    console.log('🔑 Token present:', !!token);
     return config;
   },
   (error) => {
@@ -22,17 +27,23 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor for debugging
+// Response interceptor - handle token expiration
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response received:`, response.data);
+    console.log(`✅ Response:`, response.data);
     return response;
   },
   (error) => {
-    console.error(`❌ Request failed:`, error.message);
+    console.error(`❌ Error:`, error.message);
     if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Data:', error.response.data);
+      console.log(`Status: ${error.response.status}`);
+      console.log(`Data:`, error.response.data);
+      
+      // If 401 Unauthorized, clear token and redirect to login
+      if (error.response.status === 401) {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

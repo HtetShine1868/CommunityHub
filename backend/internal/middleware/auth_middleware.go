@@ -10,17 +10,22 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
-        // Try to get token from cookie first
-        token, err := c.Cookie("auth_token")
-        
-        // If no cookie, try Authorization header
-        if err != nil || token == "" {
-            authHeader := c.GetHeader("Authorization")
-            if authHeader != "" {
-                parts := strings.Split(authHeader, " ")
-                if len(parts) == 2 && parts[0] == "Bearer" {
-                    token = parts[1]
-                }
+        var token string
+
+        // Try Authorization header first (primary method for CORS)
+        authHeader := c.GetHeader("Authorization")
+        if authHeader != "" {
+            parts := strings.Split(authHeader, " ")
+            if len(parts) == 2 && parts[0] == "Bearer" {
+                token = parts[1]
+            }
+        }
+
+        // Fallback to cookie (for backwards compatibility)
+        if token == "" {
+            cookieToken, err := c.Cookie("auth_token")
+            if err == nil && cookieToken != "" {
+                token = cookieToken
             }
         }
 
@@ -36,9 +41,6 @@ func AuthMiddleware() gin.HandlerFunc {
             return
         }
 
-        // Log for debugging
-        println("✅ AuthMiddleware: User authenticated - ID:", claims.UserID, "Username:", claims.Username)
-
         // Set user info in context
         c.Set("userID", claims.UserID)
         c.Set("username", claims.Username)
@@ -48,15 +50,16 @@ func AuthMiddleware() gin.HandlerFunc {
 
 func OptionalAuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
-        token, _ := c.Cookie("auth_token")
+        var token string
+
+        authHeader := c.GetHeader("Authorization")
+        if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+            token = strings.TrimPrefix(authHeader, "Bearer ")
+        }
+
         if token == "" {
-            authHeader := c.GetHeader("Authorization")
-            if authHeader != "" {
-                parts := strings.Split(authHeader, " ")
-                if len(parts) == 2 && parts[0] == "Bearer" {
-                    token = parts[1]
-                }
-            }
+            cookieToken, _ := c.Cookie("auth_token")
+            token = cookieToken
         }
 
         if token != "" {

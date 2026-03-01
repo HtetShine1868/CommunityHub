@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { useAuthStore } from '../store/authStore';
@@ -7,10 +7,15 @@ import { LoginCredentials, RegisterCredentials } from '../types/user.types';
 
 export const useAuth = () => {
   const navigate = useNavigate();
-  const { setUser, user, isAuthenticated } = useAuthStore();
+  const { setUser, user, isAuthenticated, checkAuth, logout: storeLogout } = useAuthStore();
   const { addNotification } = useUIStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const login = async (credentials: LoginCredentials) => {
     setLoading(true);
@@ -56,7 +61,7 @@ export const useAuth = () => {
     setLoading(true);
     try {
       await authService.logout();
-      setUser(null);
+      storeLogout();
       addNotification({ type: 'info', message: 'Logged out successfully' });
       navigate('/login');
     } catch (err: any) {
@@ -73,7 +78,6 @@ export const useAuth = () => {
     register,
     logout,
     loading,
-    isLoading: loading,
     error,
   };
 };

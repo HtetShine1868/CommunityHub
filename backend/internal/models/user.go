@@ -21,7 +21,7 @@ type User struct {
     DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
 }
 
-// BeforeCreate will set a UUID rather than numeric ID
+
 func (u *User) BeforeCreate(tx *gorm.DB) error {
     if u.ID == uuid.Nil {
         u.ID = uuid.New()
@@ -29,7 +29,6 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
     return nil
 }
 
-// TableName specifies the table name
 func (User) TableName() string {
     return "users"
 }

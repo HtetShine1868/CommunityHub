@@ -10,10 +10,7 @@ import (
 type Post struct {
     ID        uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
     Title     string         `gorm:"column:title;not null" json:"title"`
-    Content   string         `gorm:"column:content;not null" json:"content"`
-	    ContentHTML string      `gorm:"column:content_html;type:text" json:"contentHtml"` 
-    Excerpt   string        `gorm:"column:excerpt;type:text" json:"excerpt"`         
-    CoverImage string       `gorm:"column:cover_image;type:text" json:"coverImage"` 
+    Content   string         `gorm:"column:content;not null" json:"content"`     
     UserID    uuid.UUID      `gorm:"column:user_id;not null;index" json:"userId"`
     TopicID   uuid.UUID      `gorm:"column:topic_id;not null;index" json:"topicId"`
     ViewCount int            `gorm:"column:view_count;default:0" json:"viewCount"`

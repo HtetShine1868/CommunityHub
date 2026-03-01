@@ -20,7 +20,6 @@ type Topic struct {
     UpdatedAt   time.Time      `gorm:"column:updated_at" json:"updatedAt"`
     DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
     
-    // Relationships
     User        User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
@@ -28,7 +27,6 @@ func (Topic) TableName() string {
     return "topics"
 }
 
-// BeforeCreate - Generate UUID if not set
 func (t *Topic) BeforeCreate(tx *gorm.DB) error {
     if t.ID == uuid.Nil {
         t.ID = uuid.New()
@@ -37,7 +35,6 @@ func (t *Topic) BeforeCreate(tx *gorm.DB) error {
     return nil
 }
 
-// BeforeUpdate - Update timestamp
 func (t *Topic) BeforeUpdate(tx *gorm.DB) error {
     t.UpdatedAt = time.Now()
     return nil

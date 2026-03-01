@@ -11,6 +11,9 @@ type Post struct {
     ID        uuid.UUID      `gorm:"type:uuid;primary_key" json:"id"`
     Title     string         `gorm:"column:title;not null" json:"title"`
     Content   string         `gorm:"column:content;not null" json:"content"`
+	    ContentHTML string      `gorm:"column:content_html;type:text" json:"contentHtml"` 
+    Excerpt   string        `gorm:"column:excerpt;type:text" json:"excerpt"`         
+    CoverImage string       `gorm:"column:cover_image;type:text" json:"coverImage"` 
     UserID    uuid.UUID      `gorm:"column:user_id;not null;index" json:"userId"`
     TopicID   uuid.UUID      `gorm:"column:topic_id;not null;index" json:"topicId"`
     ViewCount int            `gorm:"column:view_count;default:0" json:"viewCount"`
@@ -25,6 +28,7 @@ type Post struct {
     Topic    Topic     `gorm:"foreignKey:TopicID" json:"topic,omitempty"`
     Comments []Comment `json:"comments,omitempty"`
     Likes    []Like    `json:"likes,omitempty"`
+	  Tags     []Tag     `gorm:"many2many:post_tags;" json:"tags,omitempty"`
 }
 
 func (Post) TableName() string {

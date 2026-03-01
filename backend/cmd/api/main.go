@@ -3,11 +3,13 @@ package main
 import (
     "communityHub/internal/handlers"
     "communityHub/internal/middleware"
+    "communityHub/internal/models" // <-- ADD THIS IMPORT
     "communityHub/internal/repository"
     "fmt"
     "log"
     "os"
     "strings"
+
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
     "github.com/rs/cors"
@@ -16,16 +18,15 @@ import (
 )
 
 func main() {
-
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found, using environment variables")
     }
 
     frontendURL := os.Getenv("FRONTEND_URL")
     if frontendURL == "" {
-        frontendURL = "https://communityhub-1-8f9q.onrender.com" 
+        frontendURL = "https://communityhub-1-8f9q.onrender.com"
     }
-        allowedOrigins := []string{
+    allowedOrigins := []string{
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
@@ -44,14 +45,34 @@ func main() {
         log.Fatal("DATABASE_URL environment variable is required")
     }
 
-    fmt.Println("🔌 Connecting to database...")
-
     db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
     if err != nil {
         log.Fatal("Failed to connect to database:", err)
     }
 
     fmt.Println("✅ Connected to PostgreSQL successfully!")
+
+    // ===== ADDED: RUN MIGRATIONS =====
+    fmt.Println("🔄 Running database migrations...")
+    err = db.AutoMigrate(
+        &models.User{},
+        &models.Topic{},
+        &models.Post{},
+        &models.Comment{},
+        &models.Like{},
+        &models.Tag{},
+        &models.Follow{},
+        &models.TopicFollow{},
+        &models.SavedPost{},
+        &models.Notification{},
+        &models.Report{},
+        &models.ActivityLog{},
+    )
+    if err != nil {
+        log.Fatal("Failed to migrate database:", err)
+    }
+    fmt.Println("✅ Database migrations complete")
+    // ===== END OF ADDED SECTION =====
 
     // Initialize repositories
     userRepo := repository.NewUserRepository(db)
@@ -64,7 +85,7 @@ func main() {
     // Initialize handlers
     authHandler := handlers.NewAuthHandler(userRepo)
     topicHandler := handlers.NewTopicHandler(topicRepo)
-    postHandler := handlers.NewPostHandler(postRepo, topicRepo, tagRepo,db)
+    postHandler := handlers.NewPostHandler(postRepo, topicRepo, tagRepo, db)
     commentHandler := handlers.NewCommentHandler(commentRepo, postRepo)
     likeHandler := handlers.NewLikeHandler(likeRepo, postRepo, commentRepo)
 
@@ -76,9 +97,9 @@ func main() {
         AllowedOrigins:   allowedOrigins,
         AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
         AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
-        AllowCredentials: true, 
+        AllowCredentials: true,
         ExposedHeaders:   []string{"Content-Length"},
-        MaxAge:           86400, 
+        MaxAge:           86400,
     })
     router.Use(func(c *gin.Context) {
         corsConfig.HandlerFunc(c.Writer, c.Request)
@@ -94,14 +115,12 @@ func main() {
         auth.GET("/me", middleware.OptionalAuthMiddleware(), authHandler.GetCurrentUser)
     }
 
-    // Public routes - ALL USING CONSISTENT PARAM NAMES
+    // Public routes
     router.GET("/api/topics", middleware.OptionalAuthMiddleware(), topicHandler.GetAllTopics)
     router.GET("/api/topics/:id", middleware.OptionalAuthMiddleware(), topicHandler.GetTopic)
     router.GET("/api/topics/:id/posts", middleware.OptionalAuthMiddleware(), postHandler.GetPostsByTopic)
-
     router.GET("/api/posts/:id", middleware.OptionalAuthMiddleware(), postHandler.GetPost)
-    router.GET("/api/posts/:id/comments", middleware.OptionalAuthMiddleware(), commentHandler.GetCommentsByPost) // FIXED: use :id
-
+    router.GET("/api/posts/:id/comments", middleware.OptionalAuthMiddleware(), commentHandler.GetCommentsByPost)
     router.GET("/api/popular-posts", postHandler.GetPopularPosts)
     router.GET("/api/recent-posts", postHandler.GetRecentPosts)
 
@@ -114,7 +133,7 @@ func main() {
         api.PUT("/topics/:id", topicHandler.UpdateTopic)
         api.DELETE("/topics/:id", topicHandler.DeleteTopic)
 
-        // Posts - use :id consistently
+        // Posts
         api.POST("/topics/:id/posts", postHandler.CreatePost)
         api.PUT("/posts/:id", postHandler.UpdatePost)
         api.DELETE("/posts/:id", postHandler.DeletePost)
@@ -122,7 +141,7 @@ func main() {
         api.POST("/posts/:id/lock", postHandler.ToggleLock)
 
         // Comments
-        api.POST("/posts/:id/comments", commentHandler.CreateComment) // FIXED: use :id
+        api.POST("/posts/:id/comments", commentHandler.CreateComment)
         api.PUT("/comments/:id", commentHandler.UpdateComment)
         api.DELETE("/comments/:id", commentHandler.DeleteComment)
         api.GET("/comments/:id/replies", commentHandler.GetReplies)
@@ -141,5 +160,4 @@ func main() {
     if err := router.Run(":" + port); err != nil {
         log.Fatal("Failed to start server:", err)
     }
-      router.Run(":" + port)
 }

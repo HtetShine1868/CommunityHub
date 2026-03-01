@@ -46,7 +46,7 @@ func main() {
     // Initialize handlers
     authHandler := handlers.NewAuthHandler(userRepo)
     topicHandler := handlers.NewTopicHandler(topicRepo)
-    postHandler := handlers.NewPostHandler(postRepo, topicRepo, tagRepo)
+    postHandler := handlers.NewPostHandler(postRepo, topicRepo, tagRepo,db)
     commentHandler := handlers.NewCommentHandler(commentRepo, postRepo)
     likeHandler := handlers.NewLikeHandler(likeRepo, postRepo, commentRepo)
 

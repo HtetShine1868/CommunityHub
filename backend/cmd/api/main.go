@@ -3,7 +3,6 @@ package main
 import (
     "communityHub/internal/handlers"
     "communityHub/internal/middleware"
-    "communityHub/internal/models"
     "communityHub/internal/repository"
     "fmt"
     "log"

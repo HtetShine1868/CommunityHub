@@ -56,11 +56,11 @@ func main() {
     fmt.Println("🔄 Running database migrations...")
     err = db.AutoMigrate(
         &models.User{},
-        &models.Topic{},
-        &models.Post{},
-        &models.Comment{},
-        &models.Like{},
-        &models.Tag{},
+        //&models.Topic{},
+        //&models.Post{},
+        //&models.Comment{},
+        //&models.Like{},
+        //&models.Tag{},
    
     )
     if err != nil {

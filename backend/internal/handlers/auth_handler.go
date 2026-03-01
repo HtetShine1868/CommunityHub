@@ -5,6 +5,7 @@ import (
     "communityHub/internal/models"
     "communityHub/internal/repository"
     "net/http"
+    "os" // <-- ADDED for production detection
 
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
@@ -17,6 +18,11 @@ type AuthHandler struct {
 
 func NewAuthHandler(userRepo *repository.UserRepository) *AuthHandler {
     return &AuthHandler{userRepo: userRepo}
+}
+
+// Helper function to check if running in production
+func isProduction() bool {
+    return os.Getenv("GO_ENV") == "production" || os.Getenv("RENDER") != ""
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -81,15 +87,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // Set cookie
+    // Set cookie with production-ready settings
     c.SetCookie(
         "auth_token",
         token,
         3600*24, // 24 hours
-        "/",
-        "localhost",
-        false,  // secure - set to true in production with HTTPS
-        true,   // httpOnly
+        "/",     // path - available on all routes
+        "",      // domain - empty works best for Render
+        isProduction(), // secure - true for HTTPS, false for local
+        true,    // httpOnly - prevents XSS attacks
     )
 
     c.JSON(http.StatusCreated, gin.H{
@@ -139,15 +145,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
 
-    // Set cookie
+    // Set cookie with production-ready settings
     c.SetCookie(
         "auth_token",
         token,
         3600*24, // 24 hours
-        "/",
-        "localhost",
-        false,
-        true,
+        "/",     // path - available on all routes
+        "",      // domain - empty works best for Render
+        isProduction(), // secure - true for HTTPS, false for local
+        true,    // httpOnly - prevents XSS attacks
     )
 
     c.JSON(http.StatusOK, gin.H{
@@ -161,14 +167,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-    // Clear the auth cookie
+    // Clear the auth cookie with production-ready settings
     c.SetCookie(
         "auth_token",
         "",
-        -1,
+        -1, // negative value deletes the cookie
         "/",
-        "localhost",
-        false,
+        "",
+        isProduction(),
         true,
     )
 

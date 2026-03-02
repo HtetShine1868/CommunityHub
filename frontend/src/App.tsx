@@ -16,15 +16,15 @@ import PostDetailPage from './pages/PostDetailPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
-import DebugEnv from './components/DebugEnv';
+
 import TestPage from './pages/TestPage';
 function App() {
   const { mode } = useThemeStore();
   const theme = mode === 'light' ? lightTheme : darkTheme;
 
   return (
-    <>
-      <DebugEnv />
+
+
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -46,7 +46,6 @@ function App() {
         <ToastContainer position="top-right" autoClose={3000} theme={mode} />
       </ThemeProvider>
     </ErrorBoundary>
-      </>
   );
 }
 

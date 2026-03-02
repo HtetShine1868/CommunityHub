@@ -1,17 +1,40 @@
 import axios from 'axios';
 
-const API_URL = process.env.VITE_API_URL || 'http://localhost:8080/api';
+// 🔍 DEBUG: Log all possible sources
+console.log('🔍 ===== API URL DEBUG =====');
+console.log('1. import.meta.env.VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('2. import.meta.env.MODE:', import.meta.env.MODE);
+console.log('3. import.meta.env.PROD:', import.meta.env.PROD);
+console.log('4. window.location.origin:', window.location.origin);
+console.log('5. window.location.hostname:', window.location.hostname);
+
+// Get API URL with fallback
+const getApiUrl = () => {
+  // Try import.meta.env first (Vite's way)
+  if (import.meta.env.VITE_API_URL) {
+    console.log('✅ Using VITE_API_URL from import.meta.env:', import.meta.env.VITE_API_URL);
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Try to construct from current origin (for same-domain deployment)
+  const constructedUrl = `${window.location.origin}/api`;
+  console.log('⚠️ VITE_API_URL not found, constructing from origin:', constructedUrl);
+  return constructedUrl;
+};
+
+const API_URL = getApiUrl();
+console.log('🎯 Final API_URL being used:', API_URL);
+console.log('🔍 ===== END DEBUG =====\n');
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Keep for cookies if needed
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-
-// Request interceptor - add token to every request
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token');
@@ -19,32 +42,36 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`);
-    console.log('🔑 Token present:', !!token);
+    console.log(`🌐 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    console.log('  → Full URL:', `${config.baseURL}${config.url}`);
+    console.log('  → Token present:', !!token);
+    
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle token expiration
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response:`, response.data);
+    console.log(`✅ Response:`, response.status);
     return response;
   },
   (error) => {
-    console.error(`❌ Error:`, error.message);
     if (error.response) {
-      console.log(`Status: ${error.response.status}`);
-      console.log(`Data:`, error.response.data);
-      
-      // If 401 Unauthorized, clear token and redirect to login
+      console.error(`❌ Error ${error.response.status}:`, error.response.data);
       if (error.response.status === 401) {
         localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
+    } else if (error.request) {
+      console.error('❌ No response from server');
+      console.error('  → URL attempted:', API_URL);
+      console.error('  → Error:', error.message);
+    } else {
+      console.error('❌ Request error:', error.message);
     }
     return Promise.reject(error);
   }

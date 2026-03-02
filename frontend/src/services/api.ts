@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// 🔥 HARDCODED WORKING URL - Use this until env vars work
-const API_URL = 'https://communityhub-09ib.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 console.log('🚀 API URL:', API_URL);
 

@@ -25,6 +25,7 @@ func main() {
     frontendURL := os.Getenv("FRONTEND_URL")
     if frontendURL == "" {
         frontendURL = "https://communityhub-1-8f9q.onrender.com"
+        frontendURL = "https://communityhub-1-ucxs.onrender.com"
     }
     allowedOrigins := []string{
         "http://localhost:3000",

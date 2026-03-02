@@ -1,52 +1,25 @@
 import axios from 'axios';
 
+// 🔥 HARDCODED WORKING URL - Use this until env vars work
 const API_URL = 'https://communityhub-09ib.onrender.com/api';
+
+console.log('🚀 API URL:', API_URL);
+
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Keep for cookies if needed
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-
-// Request interceptor - add token to every request
+// Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    console.log(`🌐 ${config.method?.toUpperCase()} ${config.url}`);
-    console.log('🔑 Token present:', !!token);
+    console.log(`🌐 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor - handle token expiration
-api.interceptors.response.use(
-  (response) => {
-    console.log(`✅ Response:`, response.data);
-    return response;
-  },
-  (error) => {
-    console.error(`❌ Error:`, error.message);
-    if (error.response) {
-      console.log(`Status: ${error.response.status}`);
-      console.log(`Data:`, error.response.data);
-      
-      // If 401 Unauthorized, clear token and redirect to login
-      if (error.response.status === 401) {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;

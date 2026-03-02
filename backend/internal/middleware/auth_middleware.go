@@ -12,7 +12,7 @@ func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         var token string
 
-        // Try Authorization header first (primary method for CORS)
+
         authHeader := c.GetHeader("Authorization")
         if authHeader != "" {
             parts := strings.Split(authHeader, " ")

@@ -6,6 +6,7 @@ import (
     "communityHub/internal/repository"
     "net/http"
     "os"
+    "time"
 
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
@@ -49,9 +50,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
     // Create user
     user := &models.User{
-        Username: req.Username,
-        Email:    req.Email,
-        Password: hashedPassword,
+        Username:  req.Username,
+        Email:     req.Email,
+        Password:  hashedPassword,
+        Role:      "user",
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
     }
 
     if err := h.userRepo.Create(user); err != nil {
@@ -66,42 +70,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // ✅ FIXED: Set cookie with proper domain for Render
-    isProduction := os.Getenv("ENVIRONMENT") == "production"
-    
-    if isProduction {
-        // For Render - allow all subdomains
-        c.SetCookie(
-            "auth_token",
-            token,
-            3600*24*7, // 7 days
-            "/",
-            ".onrender.com", // ⭐ Notice the dot - allows all render subdomains
-            true,            // Secure (HTTPS only)
-            true,            // HttpOnly
-        )
-        // Also set SameSite=None for cross-site requests
-        c.Header("Set-Cookie", "auth_token="+token+"; Path=/; Domain=.onrender.com; HttpOnly; Secure; SameSite=None; Max-Age=604800")
-    } else {
-        // Local development
-        c.SetCookie(
-            "auth_token",
-            token,
-            3600*24*7,
-            "/",
-            "localhost",
-            false,
-            true,
-        )
-    }
+    // Set cookie for Render
+    setAuthCookie(c, token)
 
+    // Return token in response body
     c.JSON(http.StatusCreated, gin.H{
         "message": "user created successfully",
         "user": gin.H{
             "id":       user.ID,
             "username": user.Username,
             "email":    user.Email,
+            "role":     user.Role,
         },
+        "token": token,
     })
 }
 
@@ -125,6 +106,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
 
+    // Update last seen
+    now := time.Now()
+    user.LastSeen = &now
+    h.userRepo.Update(user)
+
     // Generate token
     token, err := auth.GenerateToken(user.ID.String(), user.Username, user.Email)
     if err != nil {
@@ -132,7 +118,26 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
 
-    // ✅ FIXED: Set cookie with proper domain for Render
+    // Set cookie for Render
+    setAuthCookie(c, token)
+
+    // Return token in response body
+    c.JSON(http.StatusOK, gin.H{
+        "message": "login successful",
+        "user": gin.H{
+            "id":       user.ID,
+            "username": user.Username,
+            "email":    user.Email,
+            "role":     user.Role,
+            "bio":      user.Bio,
+            "avatar":   user.Avatar,
+        },
+        "token": token,
+    })
+}
+
+// Helper function to set cookie with proper settings for Render
+func setAuthCookie(c *gin.Context, token string) {
     isProduction := os.Getenv("ENVIRONMENT") == "production"
     
     if isProduction {
@@ -142,11 +147,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
             token,
             3600*24*7, // 7 days
             "/",
-            ".onrender.com", // ⭐ Notice the dot - allows all render subdomains
+            ".onrender.com", // Dot prefix allows all render subdomains
             true,            // Secure (HTTPS only)
             true,            // HttpOnly
         )
-        // Also set SameSite=None for cross-site requests
+        // Also set SameSite=None explicitly for cross-site requests
         c.Header("Set-Cookie", "auth_token="+token+"; Path=/; Domain=.onrender.com; HttpOnly; Secure; SameSite=None; Max-Age=604800")
     } else {
         // Local development
@@ -160,15 +165,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
             true,
         )
     }
-
-    c.JSON(http.StatusOK, gin.H{
-        "message": "login successful",
-        "user": gin.H{
-            "id":       user.ID,
-            "username": user.Username,
-            "email":    user.Email,
-        },
-    })
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -185,6 +181,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
             true,
             true,
         )
+        c.Header("Set-Cookie", "auth_token=; Path=/; Domain=.onrender.com; HttpOnly; Secure; SameSite=None; Max-Age=0")
     } else {
         // Clear cookie for local
         c.SetCookie(

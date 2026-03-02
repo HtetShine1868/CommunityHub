@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Paper,
@@ -8,7 +8,10 @@ import {
   Box,
   Link,
   Alert,
+  IconButton,
+  InputAdornment,
 } from '@mui/material';
+import { Visibility, VisibilityOff, Email, Lock } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,21 +19,33 @@ import { z } from 'zod';
 import { useAuth } from '../hooks/useAuth';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(6, 'Password too short'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loading, error } = useAuth();
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { login, isLoading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginForm) => {
-    await login(data);
+  const onSubmit = async (data: LoginFormData) => {
+    setError(null);
+    try {
+      await login(data);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    }
   };
 
   return (
@@ -39,7 +54,9 @@ const LoginPage: React.FC = () => {
         <Typography variant="h4" align="center" gutterBottom>
           Login
         </Typography>
+        
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        
         <form onSubmit={handleSubmit(onSubmit)}>
           <TextField
             {...register('email')}
@@ -48,26 +65,50 @@ const LoginPage: React.FC = () => {
             margin="normal"
             error={!!errors.email}
             helperText={errors.email?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Email color="action" />
+                </InputAdornment>
+              ),
+            }}
           />
+
           <TextField
             {...register('password')}
             fullWidth
-            type="password"
             label="Password"
+            type={showPassword ? 'text' : 'password'}
             margin="normal"
             error={!!errors.password}
             helperText={errors.password?.message}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
+
           <Button
             type="submit"
             fullWidth
             variant="contained"
             size="large"
-            disabled={loading}
+            disabled={isLoading}
             sx={{ mt: 3 }}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {isLoading ? 'Logging in...' : 'Login'}
           </Button>
+
           <Box sx={{ mt: 2, textAlign: 'center' }}>
             <Link component={RouterLink} to="/register">
               Don't have an account? Register

@@ -12,7 +12,7 @@ func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         var token string
 
-
+        // Try to get token from Authorization header first (most reliable)
         authHeader := c.GetHeader("Authorization")
         if authHeader != "" {
             parts := strings.Split(authHeader, " ")
@@ -21,7 +21,7 @@ func AuthMiddleware() gin.HandlerFunc {
             }
         }
 
-        // Fallback to cookie (for backwards compatibility)
+        // If no header, try cookie
         if token == "" {
             cookieToken, err := c.Cookie("auth_token")
             if err == nil && cookieToken != "" {
@@ -44,6 +44,7 @@ func AuthMiddleware() gin.HandlerFunc {
         // Set user info in context
         c.Set("userID", claims.UserID)
         c.Set("username", claims.Username)
+        c.Set("email", claims.Email)
         c.Next()
     }
 }
@@ -52,11 +53,16 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         var token string
 
+        // Try Authorization header
         authHeader := c.GetHeader("Authorization")
-        if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-            token = strings.TrimPrefix(authHeader, "Bearer ")
+        if authHeader != "" {
+            parts := strings.Split(authHeader, " ")
+            if len(parts) == 2 && parts[0] == "Bearer" {
+                token = parts[1]
+            }
         }
 
+        // Try cookie
         if token == "" {
             cookieToken, _ := c.Cookie("auth_token")
             token = cookieToken
@@ -67,6 +73,7 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
             if err == nil {
                 c.Set("userID", claims.UserID)
                 c.Set("username", claims.Username)
+                c.Set("email", claims.Email)
             }
         }
 

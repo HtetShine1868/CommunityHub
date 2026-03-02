@@ -16,12 +16,15 @@ import PostDetailPage from './pages/PostDetailPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
-
+import DebugEnv from './components/DebugEnv';
+import TestPage from './pages/TestPage';
 function App() {
   const { mode } = useThemeStore();
   const theme = mode === 'light' ? lightTheme : darkTheme;
 
   return (
+    <>
+      <DebugEnv />
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -35,6 +38,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route element={<ProtectedRoute />}>
+            <Route path="/test" element={<TestPage />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Routes>
@@ -42,6 +46,7 @@ function App() {
         <ToastContainer position="top-right" autoClose={3000} theme={mode} />
       </ThemeProvider>
     </ErrorBoundary>
+      </>
   );
 }
 

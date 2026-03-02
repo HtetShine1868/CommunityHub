@@ -91,7 +91,13 @@ func main() {
         auth.POST("/logout", authHandler.Logout)
         auth.GET("/me", middleware.OptionalAuthMiddleware(), authHandler.GetCurrentUser)
     }
-
+    router.GET("/api/health", func(c *gin.Context) {
+    c.JSON(200, gin.H{
+        "status": "ok",
+        "message": "Backend is running",
+        "time": time.Now().Unix(),
+    })
+})
     // Public routes
     router.GET("/api/topics", middleware.OptionalAuthMiddleware(), topicHandler.GetAllTopics)
     router.GET("/api/topics/:id", middleware.OptionalAuthMiddleware(), topicHandler.GetTopic)

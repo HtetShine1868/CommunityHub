@@ -548,15 +548,15 @@ const TopicDetailPage: React.FC = () => {
         onPostUpdated={handlePostCreated}
       />
 
-      <EditTopicModal
-        open={editTopicModalOpen}
-        onClose={() => setEditTopicModalOpen(false)}
-        topic={topic}
-        onTopicUpdated={() => {
-          fetchTopic();
-          setEditTopicModalOpen(false);
-        }}
-      />
+        <EditTopicModal
+          open={editTopicModalOpen}
+          onClose={() => setEditTopicModalOpen(false)}
+          topic={topic}
+          onTopicUpdated={async () => {
+            await fetchTopic();
+            setEditTopicModalOpen(false);
+          }}
+        />
     </Container>
   );
 };

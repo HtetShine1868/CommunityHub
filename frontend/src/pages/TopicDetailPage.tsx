@@ -14,6 +14,11 @@ import {
   Divider,
   Breadcrumbs,
   Link as MuiLink,
+  IconButton,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Add,
@@ -24,6 +29,10 @@ import {
   People,
   Edit,
   Delete,
+  MoreVert,
+  Share,
+  Bookmark,
+  BookmarkBorder,
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/authStore';
 import { topicService } from '../services/topic.service';
@@ -40,6 +49,8 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 const TopicDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, isAuthenticated } = useAuthStore();
 
   // State
@@ -61,11 +72,16 @@ const TopicDetailPage: React.FC = () => {
   const [editPostModalOpen, setEditPostModalOpen] = useState(false);
   const [editTopicModalOpen, setEditTopicModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  
+  // Menu
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [following, setFollowing] = useState(false);
 
   // Permissions
   const isAuthor = user?.id === topic?.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
   const canCreatePost = isAuthenticated && !topic?.isPrivate;
+  const canEdit = isAuthor || isAdmin;
 
   // Fetch topic details
   const fetchTopic = useCallback(async () => {
@@ -142,6 +158,7 @@ const TopicDetailPage: React.FC = () => {
       setSelectedPost(post);
       setEditPostModalOpen(true);
     }
+    handleMenuClose();
   };
 
   // Handle post delete
@@ -157,11 +174,13 @@ const TopicDetailPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to delete post:', err);
     }
+    handleMenuClose();
   };
 
   // Handle topic edit
   const handleEditTopic = () => {
     setEditTopicModalOpen(true);
+    handleMenuClose();
   };
 
   // Handle topic delete
@@ -176,6 +195,30 @@ const TopicDetailPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to delete topic:', err);
     }
+    handleMenuClose();
+  };
+
+  // Handle follow/unfollow
+  const handleFollow = () => {
+    setFollowing(!following);
+    handleMenuClose();
+    // Implement actual follow API call here
+  };
+
+  // Handle share
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    // Show toast notification
+    handleMenuClose();
+  };
+
+  // Menu handlers
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   // Handle page change
@@ -220,7 +263,7 @@ const TopicDetailPage: React.FC = () => {
           component="button"
           variant="body1"
           onClick={() => navigate('/')}
-          sx={{ cursor: 'pointer' }}
+          sx={{ cursor: 'pointer', textDecoration: 'none' }}
         >
           Home
         </MuiLink>
@@ -228,7 +271,7 @@ const TopicDetailPage: React.FC = () => {
           component="button"
           variant="body1"
           onClick={() => navigate('/topics')}
-          sx={{ cursor: 'pointer' }}
+          sx={{ cursor: 'pointer', textDecoration: 'none' }}
         >
           Topics
         </MuiLink>
@@ -239,14 +282,93 @@ const TopicDetailPage: React.FC = () => {
       <Paper 
         elevation={3} 
         sx={{ 
-          p: 4, 
+          p: { xs: 3, md: 4 }, 
           mb: 4,
           position: 'relative',
           borderTop: `4px solid ${topic.color || '#6366f1'}`,
+          borderRadius: 2,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+        {/* Topic actions menu - FIXED POSITIONING */}
+        <Box 
+          sx={{ 
+            position: 'absolute', 
+            top: 16, 
+            right: 16,
+            zIndex: 10,
+          }}
+        >
+          <IconButton
+            onClick={handleMenuOpen}
+            size="small"
+            sx={{ 
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+          >
+            <MoreVert />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            {isAuthenticated && (
+              <MenuItem onClick={handleFollow}>
+                {following ? <Bookmark /> : <BookmarkBorder />}
+                <Box component="span" sx={{ ml: 1 }}>
+                  {following ? 'Unfollow' : 'Follow'}
+                </Box>
+              </MenuItem>
+            )}
+            <MenuItem onClick={handleShare}>
+              <Share />
+              <Box component="span" sx={{ ml: 1 }}>Share</Box>
+            </MenuItem>
+            {canEdit && (
+              [
+                <Divider key="divider" />,
+                <MenuItem key="edit" onClick={handleEditTopic}>
+                  <Edit />
+                  <Box component="span" sx={{ ml: 1 }}>Edit Topic</Box>
+                </MenuItem>,
+                <MenuItem key="delete" onClick={handleDeleteTopic} sx={{ color: 'error.main' }}>
+                  <Delete />
+                  <Box component="span" sx={{ ml: 1 }}>Delete Topic</Box>
+                </MenuItem>
+              ]
+            )}
+          </Menu>
+        </Box>
+
+        {/* Topic title and privacy chip */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: 2,
+          mb: 2,
+          pr: { xs: 0, sm: 5 }, // Add padding right to make room for menu
+        }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 700,
+              fontSize: { xs: '1.75rem', md: '2.125rem' },
+              wordBreak: 'break-word',
+            }}
+          >
             {topic.title}
           </Typography>
           
@@ -255,19 +377,38 @@ const TopicDetailPage: React.FC = () => {
             label={topic.isPrivate ? 'Private Topic' : 'Public Topic'}
             color={topic.isPrivate ? 'default' : 'primary'}
             variant="outlined"
+            size={isMobile ? 'small' : 'medium'}
           />
         </Box>
 
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3, whiteSpace: 'pre-wrap' }}>
-          {topic.description || 'No description provided.'}
-        </Typography>
+        {/* Topic description */}
+        {topic.description && (
+          <Typography 
+            variant="body1" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 3, 
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {topic.description}
+          </Typography>
+        )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Topic metadata */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: 2,
+        }}>
           <Box sx={{ display: 'flex', gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Forum fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {total} posts
+                {total} {total === 1 ? 'post' : 'posts'}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -282,33 +423,18 @@ const TopicDetailPage: React.FC = () => {
             Created by {topic.user?.username || 'Unknown'} • {new Date(topic.createdAt).toLocaleDateString()}
           </Typography>
         </Box>
-
-        {/* Topic actions (for author/admin) */}
-        {(isAuthor || isAdmin) && (
-          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-            <Button
-              size="small"
-              startIcon={<Edit />}
-              onClick={handleEditTopic}
-              sx={{ mr: 1 }}
-            >
-              Edit
-            </Button>
-            <Button
-              size="small"
-              color="error"
-              startIcon={<Delete />}
-              onClick={handleDeleteTopic}
-            >
-              Delete
-            </Button>
-          </Box>
-        )}
       </Paper>
 
       {/* Posts Section Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" component="h2">
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        gap: 2,
+        mb: 3 
+      }}>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
           Posts {total > 0 && `(${total})`}
         </Typography>
         
@@ -317,6 +443,7 @@ const TopicDetailPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => setCreatePostModalOpen(true)}
+            fullWidth={isMobile}
           >
             New Post
           </Button>
@@ -364,8 +491,8 @@ const TopicDetailPage: React.FC = () => {
               key={post.id}
               post={post}
               onLike={() => handleLike(post.id)}
-              onEdit={isAdmin || user?.id === post.userId ? () => handleEditPost(post.id) : undefined}
-              onDelete={isAdmin || user?.id === post.userId ? () => handleDeletePost(post.id) : undefined}
+              onEdit={canEdit || user?.id === post.userId ? () => handleEditPost(post.id) : undefined}
+              onDelete={canEdit || user?.id === post.userId ? () => handleDeletePost(post.id) : undefined}
             />
           ))}
         </Box>
@@ -379,7 +506,7 @@ const TopicDetailPage: React.FC = () => {
             page={page}
             onChange={handlePageChange}
             color="primary"
-            size="large"
+            size={isMobile ? 'medium' : 'large'}
             showFirstButton
             showLastButton
           />
@@ -395,6 +522,7 @@ const TopicDetailPage: React.FC = () => {
             bottom: 16,
             right: 16,
             display: { xs: 'flex', md: 'none' },
+            zIndex: 1000,
           }}
           onClick={() => setCreatePostModalOpen(true)}
         >

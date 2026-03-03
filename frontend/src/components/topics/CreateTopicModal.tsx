@@ -12,15 +12,19 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { useTopics } from '../../hooks/useTopics';
 
 interface CreateTopicModalProps {
   open: boolean;
   onClose: () => void;
+  onCreateTopic: (data: any) => Promise<void>;
 }
 
-const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) => {
-  const { createTopic, loading } = useTopics();
+const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ 
+  open, 
+  onClose, 
+  onCreateTopic 
+}) => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -48,11 +52,14 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
       return;
     }
 
+    setLoading(true);
     try {
-      await createTopic(formData);
+      await onCreateTopic(formData);
       onClose();
-    } catch (err) {
-      // Error is handled in hook
+    } catch (err: any) {
+      setError(err.message || 'Failed to create topic');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,12 +73,9 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
       onClose={handleClose}
       maxWidth="sm" 
       fullWidth
-      // Prevent focus from being trapped in hidden elements
       disableEnforceFocus
-      // Ensure proper cleanup
       TransitionProps={{
         onExited: () => {
-          // Remove any lingering focus issues
           document.body.style.overflow = 'unset';
         },
       }}

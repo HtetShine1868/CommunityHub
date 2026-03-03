@@ -34,10 +34,10 @@ export const useTopics = () => {
     fetchTopics();
   }, [fetchTopics]);
 
-  const createTopic = async (data: CreateTopicData) => {
+  const createTopic = async (data: CreateTopicData): Promise<Topic> => {
     if (!isAuthenticated) {
       addNotification({ type: 'error', message: 'Please login to create a topic' });
-      return;
+      throw new Error('Not authenticated');
     }
 
     setLoading(true);
@@ -47,7 +47,7 @@ export const useTopics = () => {
       const newTopic = await topicService.createTopic(data);
       console.log('✅ Topic created:', newTopic);
       
-      // ✅ FIX: Immediately update the topics list with the new topic
+      // Immediately update the topics list with the new topic
       setTopics(prevTopics => [newTopic, ...prevTopics]);
       
       addNotification({ type: 'success', message: 'Topic created successfully!' });
@@ -63,17 +63,17 @@ export const useTopics = () => {
     }
   };
 
-  const updateTopic = async (id: string, data: UpdateTopicData) => {
+  const updateTopic = async (id: string, data: UpdateTopicData): Promise<Topic> => {
     if (!isAuthenticated) {
       addNotification({ type: 'error', message: 'Please login to update a topic' });
-      return;
+      throw new Error('Not authenticated');
     }
 
     setLoading(true);
     setError(null);
     try {
       const updatedTopic = await topicService.updateTopic(id, data);
-      // ✅ FIX: Update the specific topic in the list
+      // Update the specific topic in the list
       setTopics(prev => prev.map(t => t.id === id ? updatedTopic : t));
       addNotification({ type: 'success', message: 'Topic updated successfully!' });
       return updatedTopic;
@@ -87,17 +87,17 @@ export const useTopics = () => {
     }
   };
 
-  const deleteTopic = async (id: string) => {
+  const deleteTopic = async (id: string): Promise<void> => {
     if (!isAuthenticated) {
       addNotification({ type: 'error', message: 'Please login to delete a topic' });
-      return;
+      throw new Error('Not authenticated');
     }
 
     setLoading(true);
     setError(null);
     try {
       await topicService.deleteTopic(id);
-      // ✅ FIX: Remove the deleted topic from the list
+      // Remove the deleted topic from the list
       setTopics(prev => prev.filter(t => t.id !== id));
       addNotification({ type: 'success', message: 'Topic deleted successfully!' });
     } catch (err: any) {

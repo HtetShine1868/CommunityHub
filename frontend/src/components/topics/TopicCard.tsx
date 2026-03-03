@@ -9,22 +9,20 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Badge,
+  useTheme,
 } from '@mui/material';
 import {
-  Lock,
-  Public,
   Forum,
   People,
+  Lock,
+  Public,
   MoreVert,
   Edit,
   Delete,
-
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Topic } from '../../types/topic.types';
 import { useAuthStore } from '../../store/authStore';
-import { postService } from '../../services/post.service';
 
 interface TopicCardProps {
   topic: Topic;
@@ -33,27 +31,32 @@ interface TopicCardProps {
 }
 
 const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [postCount, setPostCount] = useState(topic.postCount || 0);
-
-  // Fetch actual post count if not provided
-  React.useEffect(() => {
-    const fetchPostCount = async () => {
-      if (!topic.postCount) {
-        try {
-          const response = await postService.getPostsByTopic(topic.id, 1, 1);
-          setPostCount(response.total);
-        } catch (error) {
-          console.error('Failed to fetch post count:', error);
-        }
-      }
-    };
-    fetchPostCount();
-  }, [topic.id, topic.postCount]);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const isAuthor = user?.id === topic.userId;
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const canEdit = isAuthor || isAdmin;
+
+  const getTopicColor = () => {
+    return topic.color || theme.palette.primary.main;
+  };
+
+  const getUserDisplay = () => {
+    if (topic.user?.username) {
+      return topic.user.username;
+    }
+    return 'Unknown User';
+  };
+
+  const getUserInitial = () => {
+    if (topic.user?.username) {
+      return topic.user.username[0].toUpperCase();
+    }
+    return '?';
+  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -67,117 +70,153 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleMenuClose();
-    onEdit?.();
+    if (onEdit) onEdit();
   };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleMenuClose();
-    onDelete?.();
-  };
-
-  const getInitials = () => {
-    if (topic.user?.username) {
-      return topic.user.username[0].toUpperCase();
-    }
-    return '?';
+    if (onDelete) onDelete();
   };
 
   return (
     <Card
       sx={{
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         cursor: 'pointer',
         position: 'relative',
+        overflow: 'visible',
         transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: 4,
+          '& .topic-icon': {
+            transform: 'scale(1.1) rotate(5deg)',
+          },
         },
       }}
       onClick={() => navigate(`/topics/${topic.id}`)}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-          <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: -20,
+          left: 20,
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: `linear-gradient(135deg, ${getTopicColor()} 0%, ${getTopicColor()}dd 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: `0 10px 20px ${getTopicColor()}40`,
+          transition: 'transform 0.3s ease',
+          className: 'topic-icon',
+        }}
+      >
+        {topic.icon ? (
+          <img src={topic.icon} alt={topic.title} style={{ width: 30, height: 30 }} />
+        ) : (
+          <Forum sx={{ color: 'white', fontSize: 30 }} />
+        )}
+      </Box>
+
+      <CardContent sx={{ pt: 6 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, pr: 4 }}>
             {topic.title}
           </Typography>
           <Chip
             icon={topic.isPrivate ? <Lock /> : <Public />}
             label={topic.isPrivate ? 'Private' : 'Public'}
             size="small"
-            color={topic.isPrivate ? 'default' : 'primary'}
-            variant="outlined"
+            sx={{
+              backgroundColor: topic.isPrivate ? '#fee2e2' : '#e0f2fe',
+              color: topic.isPrivate ? '#b91c1c' : '#0369a1',
+              '& .MuiChip-icon': {
+                color: 'inherit',
+              },
+            }}
           />
         </Box>
 
         <Typography
+          variant="body2"
           color="text.secondary"
           sx={{
-            mb: 3,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            mb: 2,
             display: '-webkit-box',
-            WebkitLineClamp: 3,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            minHeight: '60px',
+            overflow: 'hidden',
+            height: 40,
           }}
         >
           {topic.description || 'No description provided.'}
         </Typography>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Forum fontSize="small" color="action" />
-              <Typography variant="caption" color="text.secondary">
-                <Badge badgeContent={postCount} color="primary" max={999} showZero>
-                  <span style={{ padding: '0 8px' }}>posts</span>
-                </Badge>
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <People fontSize="small" color="action" />
-              <Typography variant="caption" color="text.secondary">
-                {topic.followerCount || 0} followers
-              </Typography>
-            </Box>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Forum fontSize="small" color="action" />
+            <Typography variant="caption" color="text.secondary">
+              {topic.postCount || 0} posts
+            </Typography>
           </Box>
 
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <People fontSize="small" color="action" />
+            <Typography variant="caption" color="text.secondary">
+              {topic.followerCount || 0} followers
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                {getInitials()}
-              </Avatar>
-              <Typography variant="caption" color="text.secondary">
-                {topic.user?.username || 'Unknown'}
-              </Typography>
-            </Box>
-
-            {isAuthor && (
-              <>
-                <IconButton
-                  size="small"
-                  onClick={handleMenuOpen}
-                  sx={{ ml: 1 }}
-                >
-                  <MoreVert fontSize="small" />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem onClick={handleEdit}>
-                    <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
-                  </MenuItem>
-                  <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                    <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
-                  </MenuItem>
-                </Menu>
-              </>
-            )}
+            <Avatar
+              src={topic.user?.avatar}
+              sx={{ width: 24, height: 24 }}
+            >
+              {getUserInitial()}
+            </Avatar>
+            <Typography variant="caption" color="text.secondary">
+              by {getUserDisplay()}
+            </Typography>
           </Box>
+          
+          {canEdit && (
+            <>
+              <IconButton 
+                size="small" 
+                onClick={handleMenuOpen}
+                aria-label="topic options"
+              >
+                <MoreVert fontSize="small" />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <MenuItem onClick={handleEdit}>
+                  <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
+                </MenuItem>
+                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                  <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
+                </MenuItem>
+              </Menu>
+            </>
+          )}
         </Box>
       </CardContent>
     </Card>

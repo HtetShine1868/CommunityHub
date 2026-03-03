@@ -11,21 +11,47 @@ import {
 import { Search, Add } from '@mui/icons-material';
 import { useTopics } from '../hooks/useTopics';
 import { useAuthStore } from '../store/authStore';
+import { Topic } from '../types/topic.types';
 import TopicList from '../components/topics/TopicList';
 import CreateTopicModal from '../components/topics/CreateTopicModal';
+import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TopicsPage: React.FC = () => {
-  const { topics, loading, error } = useTopics();
+  const { topics, loading, error, createTopic, updateTopic, deleteTopic } = useTopics();
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
   // Filter topics based on search
   const filteredTopics = topics.filter(topic =>
     topic.title.toLowerCase().includes(search.toLowerCase()) ||
     (topic.description && topic.description.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const handleEdit = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setEditModalOpen(true);
+  };
+
+  const handleDelete = async (topic: Topic) => {
+    if (window.confirm(`Are you sure you want to delete "${topic.title}"?`)) {
+      await deleteTopic(topic.id);
+    }
+  };
+
+  const handleUpdateTopic = async (id: string, data: any) => {
+    await updateTopic(id, data);
+    setEditModalOpen(false);
+    setSelectedTopic(null);
+  };
+
+  const handleCreateTopic = async (data: any) => {
+    await createTopic(data);
+    setCreateModalOpen(false);
+  };
 
   if (loading && topics.length === 0) {
     return <LoadingSpinner message="Loading topics..." />;
@@ -60,6 +86,8 @@ const TopicsPage: React.FC = () => {
 
       <TopicList
         topics={filteredTopics}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
         emptyMessage={
           search 
             ? `No topics matching "${search}"` 
@@ -84,6 +112,17 @@ const TopicsPage: React.FC = () => {
       <CreateTopicModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
+        onCreateTopic={handleCreateTopic}
+      />
+
+      <EditTopicModal
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedTopic(null);
+        }}
+        topic={selectedTopic}
+        onTopicUpdated={handleUpdateTopic}
       />
     </Container>
   );

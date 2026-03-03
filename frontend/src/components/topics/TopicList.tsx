@@ -5,11 +5,15 @@ import TopicCard from './TopicCard';
 
 interface TopicListProps {
   topics: Topic[];
+  onEdit?: (topic: Topic) => void;
+  onDelete?: (topic: Topic) => void;
   emptyMessage?: string;
 }
 
 const TopicList: React.FC<TopicListProps> = ({ 
   topics, 
+  onEdit,
+  onDelete,
   emptyMessage = 'No topics found' 
 }) => {
   if (!topics || topics.length === 0) {
@@ -24,7 +28,11 @@ const TopicList: React.FC<TopicListProps> = ({
     <Grid container spacing={3}>
       {topics.map((topic) => (
         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={topic.id}>
-          <TopicCard topic={topic} />
+          <TopicCard 
+            topic={topic} 
+            onEdit={() => onEdit?.(topic)}
+            onDelete={() => onDelete?.(topic)}
+          />
         </Grid>
       ))}
     </Grid>

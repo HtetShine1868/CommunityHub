@@ -13,13 +13,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Topic } from '../../types/topic.types';
-import { topicService } from '../../services/topic.service';
 
 interface EditTopicModalProps {
   open: boolean;
   onClose: () => void;
   topic: Topic | null;
-  onTopicUpdated: () => void;
+  onTopicUpdated: (id: string, data: any) => Promise<void>;
 }
 
 const EditTopicModal: React.FC<EditTopicModalProps> = ({
@@ -40,10 +39,10 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
   useEffect(() => {
     if (topic) {
       setFormData({
-        title: topic.title,
+        title: topic.title || '',
         description: topic.description || '',
         color: topic.color || '#6366f1',
-        isPrivate: topic.isPrivate,
+        isPrivate: topic.isPrivate || false,
       });
     }
   }, [topic]);
@@ -56,9 +55,9 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
     if (!topic) return;
 
     setLoading(true);
+    setError(null);
     try {
-      await topicService.updateTopic(topic.id, formData);
-      onTopicUpdated();
+      await onTopicUpdated(topic.id, formData);
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to update topic');
@@ -67,8 +66,18 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose}
+      maxWidth="sm" 
+      fullWidth
+      disableEnforceFocus
+    >
       <DialogTitle>Edit Topic</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -80,6 +89,7 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
           margin="normal"
           required
           disabled={loading}
+          autoFocus
         />
         <TextField
           fullWidth
@@ -113,7 +123,7 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button onClick={handleClose} disabled={loading}>Cancel</Button>
         <Button
           onClick={handleSubmit}
           variant="contained"

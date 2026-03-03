@@ -21,8 +21,8 @@ export const usePosts = (topicId?: string) => {
     setError(null);
     try {
       const response = await postService.getPostsByTopic(topicId, page, pageSize);
-      setPosts(response.data);
-      setTotal(response.total);
+      setPosts(response.data || []);
+      setTotal(response.total || 0);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to fetch posts';
       setError(errorMsg);

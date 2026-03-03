@@ -7,7 +7,15 @@ import { LoginCredentials, RegisterCredentials } from '../types/user.types';
 
 export const useAuth = () => {
   const navigate = useNavigate();
-  const { setUser, user, isAuthenticated, checkAuth, logout: storeLogout } = useAuthStore();
+  const { 
+    user, 
+    isAuthenticated, 
+    setUser, 
+    setToken, 
+    logout: storeLogout, 
+    checkAuth,
+    isLoading: storeLoading 
+  } = useAuthStore();
   const { addNotification } = useUIStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +30,9 @@ export const useAuth = () => {
     try {
       const response = await authService.login(credentials);
       setUser(response.user);
+      if (response.token) {
+        setToken(response.token);
+      }
       addNotification({
         type: 'success',
         message: `Welcome back, ${response.user.username}!`,
@@ -42,6 +53,9 @@ export const useAuth = () => {
     try {
       const response = await authService.register(credentials);
       setUser(response.user);
+      if (response.token) {
+        setToken(response.token);
+      }
       addNotification({
         type: 'success',
         message: `Welcome, ${response.user.username}!`,
@@ -77,10 +91,10 @@ export const useAuth = () => {
   return {
     user,
     isAuthenticated,
+    isLoading: storeLoading || loading,
     login,
     register,
     logout,
-    loading,
     error,
   };
 };

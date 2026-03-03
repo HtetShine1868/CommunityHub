@@ -78,6 +78,9 @@ func (h *PostHandler) GetPostsByTopic(c *gin.Context) {
     for _, post := range posts {
         postResponses = append(postResponses, h.buildPostResponse(post, currentUserID))
     }
+       if posts == nil {
+        posts = []models.Post{} // Empty array instead of nil
+    }
 
     c.JSON(http.StatusOK, gin.H{
         "data":       postResponses,

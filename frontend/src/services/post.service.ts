@@ -6,7 +6,13 @@ export const postService = {
     const response = await api.get(`/topics/${topicId}/posts`, {
       params: { page, pageSize },
     });
-    return response.data;
+        return {
+      data: response.data.data || [],
+      total: response.data.total || 0,
+      page: response.data.page || 1,
+      pageSize: response.data.pageSize || 10,
+      totalPages: response.data.totalPages || 0,
+    };
   },
 
   async getPostById(id: string): Promise<Post> {

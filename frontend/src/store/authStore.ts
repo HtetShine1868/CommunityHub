@@ -51,23 +51,49 @@ export const useAuthStore = create<AuthStore>()(
           initialized: true
         });
         setAuthToken(null);
+        localStorage.removeItem('auth_token');
       },
       
-
       checkAuth: async () => {
 
-        if (get().initialized) return;
-       
-        const token = get().token;
-        if (!token) {
-          set({ isLoading: false, initialized: true  });
+        if (get().initialized) {
+          set({ isLoading: false });
           return;
         }
 
+        const token = get().token;
+
+        if (!token) {
+          console.log('ℹ️ No token found');
+          set({ 
+            isLoading: false, 
+            initialized: true,
+            user: null,
+            isAuthenticated: false 
+          });
+          return;
+        }
+
+        const timeoutId = setTimeout(() => {
+          console.log('⚠️ Auth check timeout - forcing completion');
+          set({ 
+            isLoading: false, 
+            initialized: true,
+
+            user: null,
+            isAuthenticated: false,
+            token: null
+          });
+          setAuthToken(null);
+          localStorage.removeItem('auth_token');
+        }, 5000); 
+
         try {
-          console.log('Checking authentication...');
+          console.log('🔍 Checking authentication with token...');
           const user = await authService.getCurrentUser();
-          console.log('User authenticated:', user.username);
+          clearTimeout(timeoutId);
+          
+          console.log('✅ User authenticated:', user.username);
           set({ 
             user, 
             isAuthenticated: true, 
@@ -76,7 +102,13 @@ export const useAuthStore = create<AuthStore>()(
             token 
           });
         } catch (error) {
-          console.log('Not authenticated');
+          clearTimeout(timeoutId);
+          console.log('ℹ️ Authentication failed:', error);
+          
+          // Clear invalid token
+          setAuthToken(null);
+          localStorage.removeItem('auth_token');
+          
           set({ 
             user: null, 
             isAuthenticated: false, 
@@ -84,18 +116,14 @@ export const useAuthStore = create<AuthStore>()(
             initialized: true,
             token: null 
           });
-          setAuthToken(null);
-           localStorage.removeItem('auth_token');
         }
       },
     }),
     {
       name: 'auth-storage',
-      
       partialize: (state) => ({ 
         user: state.user,
         token: state.token,
-        initialized: state.initialized,
       }),
     }
   )

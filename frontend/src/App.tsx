@@ -46,18 +46,18 @@ function App() {
         <BrowserRouter>
           <Navbar />
           <Routes>
-            {/* Public routes */}
+            {/* Public routes - NO AUTH REQUIRED */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             
-            {/* Protected routes */}
+            {/* ALL OTHER ROUTES - PROTECTED */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
               <Route path="/" element={<HomePage />} />
               <Route path="/topics" element={<TopicsPage />} />
               <Route path="/topics/:id" element={<TopicDetailPage />} />
               <Route path="/posts/:id" element={<PostDetailPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/:userId" element={<ProfilePage />} />
             </Route>
             
             {/* Catch all - redirect to home */}

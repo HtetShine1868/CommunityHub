@@ -15,9 +15,12 @@ export const useTopics = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('📥 Fetching topics...');
       const data = await topicService.getAllTopics();
+      console.log('📦 Topics fetched:', data.length);
       setTopics(data);
     } catch (err: any) {
+      console.error('❌ Error fetching topics:', err);
       const errorMsg = err.response?.data?.error || 'Failed to fetch topics';
       setError(errorMsg);
       addNotification({ type: 'error', message: errorMsg });
@@ -26,6 +29,7 @@ export const useTopics = () => {
     }
   }, [addNotification]);
 
+  // Fetch topics on mount
   useEffect(() => {
     fetchTopics();
   }, [fetchTopics]);
@@ -39,11 +43,17 @@ export const useTopics = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('➕ Creating topic:', data);
       const newTopic = await topicService.createTopic(data);
-      setTopics((prev) => [newTopic, ...prev]);
+      console.log('✅ Topic created:', newTopic);
+      
+      // ✅ FIX: Immediately update the topics list with the new topic
+      setTopics(prevTopics => [newTopic, ...prevTopics]);
+      
       addNotification({ type: 'success', message: 'Topic created successfully!' });
       return newTopic;
     } catch (err: any) {
+      console.error('❌ Error creating topic:', err);
       const errorMsg = err.response?.data?.error || 'Failed to create topic';
       setError(errorMsg);
       addNotification({ type: 'error', message: errorMsg });
@@ -63,7 +73,8 @@ export const useTopics = () => {
     setError(null);
     try {
       const updatedTopic = await topicService.updateTopic(id, data);
-      setTopics((prev) => prev.map(t => t.id === id ? updatedTopic : t));
+      // ✅ FIX: Update the specific topic in the list
+      setTopics(prev => prev.map(t => t.id === id ? updatedTopic : t));
       addNotification({ type: 'success', message: 'Topic updated successfully!' });
       return updatedTopic;
     } catch (err: any) {
@@ -86,7 +97,8 @@ export const useTopics = () => {
     setError(null);
     try {
       await topicService.deleteTopic(id);
-      setTopics((prev) => prev.filter(t => t.id !== id));
+      // ✅ FIX: Remove the deleted topic from the list
+      setTopics(prev => prev.filter(t => t.id !== id));
       addNotification({ type: 'success', message: 'Topic deleted successfully!' });
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to delete topic';

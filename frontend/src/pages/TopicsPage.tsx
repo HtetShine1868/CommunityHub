@@ -6,45 +6,29 @@ import {
   InputAdornment,
   Fab,
   Box,
+  Alert,
 } from '@mui/material';
 import { Search, Add } from '@mui/icons-material';
 import { useTopics } from '../hooks/useTopics';
 import { useAuthStore } from '../store/authStore';
-import { Topic } from '../types/topic.types';
 import TopicList from '../components/topics/TopicList';
 import CreateTopicModal from '../components/topics/CreateTopicModal';
-import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TopicsPage: React.FC = () => {
-  const { topics, loading, createTopic, updateTopic, deleteTopic, refresh } = useTopics();
+  const { topics, loading, error } = useTopics();
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
+  // Filter topics based on search
   const filteredTopics = topics.filter(topic =>
     topic.title.toLowerCase().includes(search.toLowerCase()) ||
-    topic.description?.toLowerCase().includes(search.toLowerCase())
+    (topic.description && topic.description.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const handleEdit = (topicId: string) => {
-    const topic = topics.find(t => t.id === topicId);
-    if (topic) {
-      setSelectedTopic(topic);
-      setEditModalOpen(true);
-    }
-  };
-
-  const handleDelete = async (topicId: string) => {
-    if (window.confirm('Are you sure you want to delete this topic?')) {
-      await deleteTopic(topicId);
-    }
-  };
-
-  if (loading) {
-    return <LoadingSpinner />;
+  if (loading && topics.length === 0) {
+    return <LoadingSpinner message="Loading topics..." />;
   }
 
   return (
@@ -52,6 +36,12 @@ const TopicsPage: React.FC = () => {
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
         Topics
       </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       
       <TextField
         fullWidth
@@ -70,15 +60,21 @@ const TopicsPage: React.FC = () => {
 
       <TopicList
         topics={filteredTopics}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        emptyMessage="No topics found. Be the first to create one!"
+        emptyMessage={
+          search 
+            ? `No topics matching "${search}"` 
+            : "No topics yet. Be the first to create one!"
+        }
       />
 
       {isAuthenticated && (
         <Fab
           color="primary"
-          sx={{ position: 'fixed', bottom: 16, right: 16 }}
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+          }}
           onClick={() => setCreateModalOpen(true)}
         >
           <Add />
@@ -88,16 +84,6 @@ const TopicsPage: React.FC = () => {
       <CreateTopicModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-      />
-
-      <EditTopicModal
-        open={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setSelectedTopic(null);
-        }}
-        topic={selectedTopic}
-        onTopicUpdated={refresh}
       />
     </Container>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -29,6 +29,19 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
     isPrivate: false,
   });
 
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        title: '',
+        description: '',
+        color: '#6366f1',
+        isPrivate: false,
+      });
+      setError(null);
+    }
+  }, [open]);
+
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       setError('Title is required');
@@ -38,14 +51,31 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
     try {
       await createTopic(formData);
       onClose();
-      setFormData({ title: '', description: '', color: '#6366f1', isPrivate: false });
     } catch (err) {
       // Error is handled in hook
     }
   };
 
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose}
+      maxWidth="sm" 
+      fullWidth
+      // Prevent focus from being trapped in hidden elements
+      disableEnforceFocus
+      // Ensure proper cleanup
+      TransitionProps={{
+        onExited: () => {
+          // Remove any lingering focus issues
+          document.body.style.overflow = 'unset';
+        },
+      }}
+    >
       <DialogTitle>Create New Topic</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -57,6 +87,7 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
           margin="normal"
           required
           disabled={loading}
+          autoFocus
         />
         <TextField
           fullWidth
@@ -90,7 +121,7 @@ const CreateTopicModal: React.FC<CreateTopicModalProps> = ({ open, onClose }) =>
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button onClick={handleClose} disabled={loading}>Cancel</Button>
         <Button
           onClick={handleSubmit}
           variant="contained"

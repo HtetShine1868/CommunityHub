@@ -170,8 +170,8 @@ export const useProfile = (userId?: string) => {
     }
   }, [fetchProfile, fetchStats, fetchPosts, fetchComments, fetchSavedPosts, fetchLikedPosts, isOwnProfile]);
 
-  // Update profile
-  const updateProfile = async (data: UpdateProfileData) => {
+  // ✅ FIXED: Update profile - returns Promise<void> to match component expectation
+  const updateProfile = async (data: UpdateProfileData): Promise<void> => {
     try {
       const updated = await profileService.updateProfile(data);
       setProfile(updated);
@@ -179,7 +179,6 @@ export const useProfile = (userId?: string) => {
         type: 'success',
         message: 'Profile updated successfully!',
       });
-      return updated;
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to update profile';
       addNotification({
@@ -190,8 +189,8 @@ export const useProfile = (userId?: string) => {
     }
   };
 
-  // Change password
-  const changePassword = async (data: ChangePasswordData) => {
+  // ✅ FIXED: Change password - already returns Promise<void>, good!
+  const changePassword = async (data: ChangePasswordData): Promise<void> => {
     try {
       const response = await profileService.changePassword(data);
       addNotification({
@@ -209,7 +208,7 @@ export const useProfile = (userId?: string) => {
   };
 
   // Toggle follow
-  const toggleFollow = async () => {
+  const toggleFollow = async (): Promise<void> => {
     if (!userId || isOwnProfile) return;
     
     try {
@@ -228,8 +227,8 @@ export const useProfile = (userId?: string) => {
     }
   };
 
-  // Upload avatar
-  const uploadAvatar = async (file: File) => {
+  // ✅ FIXED: Upload avatar - returns Promise<void> to match component expectation
+  const uploadAvatar = async (file: File): Promise<void> => {
     try {
       const { avatarUrl } = await profileService.uploadAvatar(file);
       setProfile(prev => prev ? { ...prev, avatar: avatarUrl } : null);
@@ -237,7 +236,6 @@ export const useProfile = (userId?: string) => {
         type: 'success',
         message: 'Avatar updated successfully!',
       });
-      return avatarUrl;
     } catch (err: any) {
       addNotification({
         type: 'error',
@@ -278,7 +276,7 @@ export const useProfile = (userId?: string) => {
     setSavedPage,
     setLikedPage,
     
-    // Actions
+    // Actions - all return Promise<void>
     updateProfile,
     changePassword,
     toggleFollow,

@@ -1,280 +1,186 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Paper,
-  Avatar,
+  Container,
   Typography,
   Box,
   Button,
-  IconButton,
-  Chip,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
+  Alert,
+  Breadcrumbs,
+  Link as MuiLink,
   CircularProgress,
-  Badge,
-  Tooltip,
 } from '@mui/material';
-import {
-  Edit,
-  PhotoCamera,
-  Person,
-  Email,
-  CalendarToday,
-  AccessTime,
-  PostAdd,
-  Comment,
-  People,
-  Favorite,
-  Bookmark,
-} from '@mui/icons-material';
-import { formatDistanceToNow, format } from 'date-fns';
-import { UserProfile } from '../types/profile.types';
+import { ArrowBack } from '@mui/icons-material';
 import { useAuthStore } from '../store/authStore';
+import { useProfile } from '../hooks/useProfile';
+import ProfileHeader from '../components/profile/ProfileHeader';
+import EditProfileModal from '../components/profile/EditProfileModal';
+import ProfileTabs from '../components/profile/ProfileTabs';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 
-interface ProfileHeaderProps {
-  profile: UserProfile;
-  stats?: {
-    posts: number;
-    comments: number;
-    followers: number;
-    following: number;
-  };
-  isOwnProfile: boolean;
-  isFollowing?: boolean;
-  followerCount?: number;
-  onFollow?: () => void;
-  onEditProfile?: () => void;
-  onAvatarChange?: (file: File) => Promise<void>; // Note: Promise<void> not Promise<string>
-}
+const ProfilePage: React.FC = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuthStore();
+  const [tabValue, setTabValue] = useState(0);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({
-  profile,
-  stats,
-  isOwnProfile,
-  isFollowing = false,
-  followerCount = 0,
-  onFollow,
-  onEditProfile,
-  onAvatarChange,
-}) => {
-  const { user } = useAuthStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const {
+    profile,
+    stats,
+    posts,
+    comments,
+    savedPosts,
+    likedPosts,
+    loading: profileLoading,
+    postsLoading,
+    commentsLoading,
+    savedLoading,
+    likedLoading,
+    error,
+    isOwnProfile,
+    isFollowing,
+    followerCount,
+    postsPage,
+    commentsPage,
+    savedPage,
+    likedPage,
+    postsTotal,
+    commentsTotal,
+    savedTotal,
+    likedTotal,
+    setPostsPage,
+    setCommentsPage,
+    setSavedPage,
+    setLikedPage,
+    updateProfile,
+    changePassword,
+    toggleFollow,
+    uploadAvatar,
+  } = useProfile(userId);
 
-  const handleAvatarClick = () => {
-    if (isOwnProfile && onAvatarChange) {
-      setAvatarDialogOpen(true);
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return <LoadingSpinner message="Checking authentication..." />;
+  }
+
+  // Redirect to login if not authenticated and trying to view own profile
+  useEffect(() => {
+    if (!user && !userId) {
+      navigate('/login');
     }
-  };
+  }, [user, userId, navigate]);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !onAvatarChange) return;
+  // Show loading while profile is loading
+  if (profileLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
-    setUploading(true);
-    try {
-      await onAvatarChange(file); // This now expects Promise<void>
-      setAvatarDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileInputClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const joinedDate = profile.createdAt ? format(new Date(profile.createdAt), 'MMMM yyyy') : 'Unknown';
-
+  // Show error if profile not found
+  if (error || !profile) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error || 'Profile not found'}
+        </Alert>
+        <Button
+          variant="contained"
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/')}
+        >
+          Back to Home
+        </Button>
+      </Container>
+    );
+  }
 
   return (
-    <>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-          {/* Avatar Section */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Badge
-              overlap="circular"
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              badgeContent={
-                isOwnProfile && onAvatarChange ? (
-                  <Tooltip title="Change avatar">
-                    <IconButton
-                      size="small"
-                      sx={{
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        '&:hover': { bgcolor: 'primary.dark' },
-                      }}
-                      onClick={handleAvatarClick}
-                    >
-                      <PhotoCamera fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
-            >
-              <Avatar
-                src={profile.avatar}
-                sx={{
-                  width: { xs: 100, md: 120 },
-                  height: { xs: 100, md: 120 },
-                  fontSize: { xs: '3rem', md: '4rem' },
-                  bgcolor: 'primary.main',
-                  cursor: isOwnProfile && onAvatarChange ? 'pointer' : 'default',
-                  transition: 'opacity 0.2s',
-                  '&:hover': isOwnProfile && onAvatarChange ? { opacity: 0.8 } : {},
-                }}
-                onClick={handleAvatarClick}
-              >
-                {profile.username[0].toUpperCase()}
-              </Avatar>
-            </Badge>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Breadcrumb navigation */}
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <MuiLink
+          component="button"
+          variant="body1"
+          onClick={() => navigate('/')}
+          sx={{ cursor: 'pointer', textDecoration: 'none' }}
+        >
+          Home
+        </MuiLink>
+        <Typography color="text.primary">
+          {isOwnProfile ? 'My Profile' : profile.username}
+        </Typography>
+      </Breadcrumbs>
 
-            {isOwnProfile && (
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-              />
-            )}
-          </Box>
+      {/* Profile Header */}
+      <ProfileHeader
+        profile={profile}
+        stats={stats || undefined}
+        isOwnProfile={isOwnProfile}
+        isFollowing={isFollowing}
+        followerCount={followerCount}
+        loading={false}
+        onFollow={toggleFollow}
+        onEditProfile={() => setEditModalOpen(true)}
+        onAvatarChange={uploadAvatar}
+      />
 
-          {/* Profile Info */}
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, flexWrap: 'wrap', gap: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {profile.username}
-              </Typography>
-              
-              {!isOwnProfile && (
-                <Button
-                  variant={isFollowing ? 'outlined' : 'contained'}
-                  color="primary"
-                  onClick={onFollow}
-                  startIcon={<People />}
-                >
-                  {isFollowing ? 'Unfollow' : 'Follow'}
-                </Button>
-              )}
-              
-              {isOwnProfile && (
-                <Button
-                  variant="outlined"
-                  startIcon={<Edit />}
-                  onClick={onEditProfile}
-                >
-                  Edit Profile
-                </Button>
-              )}
-            </Box>
+      {/* Profile Tabs */}
+      <ProfileTabs
+        value={tabValue}
+        onChange={setTabValue}
+        posts={posts}
+        comments={comments}
+        savedPosts={savedPosts}
+        likedPosts={likedPosts}
+        loading={{
+          posts: postsLoading,
+          comments: commentsLoading,
+          saved: savedLoading,
+          liked: likedLoading,
+        }}
+        pagination={{
+          posts: {
+            page: postsPage,
+            total: postsTotal,
+            onChange: setPostsPage,
+          },
+          comments: {
+            page: commentsPage,
+            total: commentsTotal,
+            onChange: setCommentsPage,
+          },
+          saved: {
+            page: savedPage,
+            total: savedTotal,
+            onChange: setSavedPage,
+          },
+          liked: {
+            page: likedPage,
+            total: likedTotal,
+            onChange: setLikedPage,
+          },
+        }}
+        onPostLike={() => {}}
+        onCommentLike={() => {}}
+        isOwnProfile={isOwnProfile}
+      />
 
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {profile.email}
-            </Typography>
-
-            {profile.bio && (
-              <Typography variant="body1" sx={{ mt: 2, mb: 2, whiteSpace: 'pre-wrap' }}>
-                {profile.bio}
-              </Typography>
-            )}
-
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
-              <Chip
-                icon={<Person />}
-                label={`Role: ${profile.role}`}
-                variant="outlined"
-                size="small"
-              />
-              <Chip
-                icon={<CalendarToday />}
-                label={`Joined ${joinedDate}`}
-                variant="outlined"
-                size="small"
-              />
-
-            </Box>
-
-            {stats && (
-              <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap' }}>
-                <Tooltip title="Posts">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <PostAdd color="action" fontSize="small" />
-                    <Typography variant="body2">{stats.posts}</Typography>
-                  </Box>
-                </Tooltip>
-                <Tooltip title="Comments">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Comment color="action" fontSize="small" />
-                    <Typography variant="body2">{stats.comments}</Typography>
-                  </Box>
-                </Tooltip>
-                <Tooltip title="Followers">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <People color="action" fontSize="small" />
-                    <Typography variant="body2">{followerCount}</Typography>
-                  </Box>
-                </Tooltip>
-                <Tooltip title="Following">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <People color="action" fontSize="small" />
-                    <Typography variant="body2">{stats.following || 0}</Typography>
-                  </Box>
-                </Tooltip>
-                <Tooltip title="Likes received">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Favorite color="action" fontSize="small" />
-                    <Typography variant="body2">0</Typography>
-                  </Box>
-                </Tooltip>
-              </Box>
-            )}
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Avatar Upload Dialog */}
-      <Dialog open={avatarDialogOpen} onClose={() => setAvatarDialogOpen(false)}>
-        <DialogTitle>Change Profile Picture</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
-            <Avatar
-              src={profile.avatar}
-              sx={{ width: 150, height: 150, fontSize: '4rem' }}
-            >
-              {profile.username[0].toUpperCase()}
-            </Avatar>
-            <Button
-              variant="contained"
-              onClick={handleFileInputClick}
-              disabled={uploading}
-              startIcon={uploading ? <CircularProgress size={20} /> : <PhotoCamera />}
-            >
-              Choose Image
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAvatarDialogOpen(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </>
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        profile={profile}
+        onUpdateProfile={updateProfile}
+        onChangePassword={changePassword}
+      />
+    </Container>
   );
 };
 
-export default ProfileHeader;
+export default ProfilePage;

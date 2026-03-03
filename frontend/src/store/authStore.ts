@@ -13,6 +13,7 @@ interface AuthStore {
   setToken: (token: string | null) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  initialized: boolean;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -22,16 +23,23 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: true,
       token: localStorage.getItem('auth_token'),
+      initialized: false,
       
       setUser: (user) => set({ 
         user, 
         isAuthenticated: !!user,
-        isLoading: false 
+        isLoading: false,
+        initialized: true 
       }),
       
       setToken: (token) => {
         set({ token });
         setAuthToken(token);
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        } else {
+          localStorage.removeItem('auth_token');
+        }
       },
       
       logout: () => {
@@ -39,53 +47,61 @@ export const useAuthStore = create<AuthStore>()(
           user: null, 
           isAuthenticated: false, 
           token: null,
-          isLoading: false 
+          isLoading: false,
+          initialized: true
         });
         setAuthToken(null);
       },
       
+
       checkAuth: async () => {
-        // If we have a token, try to get user
+
+        if (get().initialized) return;
+       
         const token = get().token;
         if (!token) {
-          set({ isLoading: false });
+          set({ isLoading: false, initialized: true  });
           return;
         }
 
         try {
-          console.log('🔍 Checking authentication...');
+          console.log('Checking authentication...');
           const user = await authService.getCurrentUser();
-          console.log('✅ User authenticated:', user.username);
+          console.log('User authenticated:', user.username);
           set({ 
             user, 
             isAuthenticated: true, 
             isLoading: false,
-            token // Keep existing token
+            initialized: true,
+            token 
           });
         } catch (error) {
-          console.log('ℹ️ Not authenticated');
+          console.log('Not authenticated');
           set({ 
             user: null, 
             isAuthenticated: false, 
             isLoading: false,
+            initialized: true,
             token: null 
           });
           setAuthToken(null);
+           localStorage.removeItem('auth_token');
         }
       },
     }),
     {
       name: 'auth-storage',
-      // Persist both user and token
+      
       partialize: (state) => ({ 
         user: state.user,
         token: state.token,
+        initialized: state.initialized,
       }),
     }
   )
 );
 
-// Initialize token on store creation
+
 const token = localStorage.getItem('auth_token');
 if (token) {
   setAuthToken(token);

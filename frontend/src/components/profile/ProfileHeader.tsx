@@ -7,15 +7,14 @@ import {
   Button,
   IconButton,
   Chip,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   CircularProgress,
   Badge,
   Tooltip,
+  Skeleton,
 } from '@mui/material';
 import {
   Edit,
@@ -28,14 +27,12 @@ import {
   Comment,
   People,
   Favorite,
-  Bookmark,
 } from '@mui/icons-material';
 import { formatDistanceToNow, format } from 'date-fns';
 import { UserProfile } from '../../types/profile.types';
-import { useAuthStore } from '../../store/authStore';
 
 interface ProfileHeaderProps {
-  profile: UserProfile;
+  profile: UserProfile | null;
   stats?: {
     posts: number;
     comments: number;
@@ -45,6 +42,7 @@ interface ProfileHeaderProps {
   isOwnProfile: boolean;
   isFollowing?: boolean;
   followerCount?: number;
+  loading?: boolean;
   onFollow?: () => void;
   onEditProfile?: () => void;
   onAvatarChange?: (file: File) => Promise<void>;
@@ -56,17 +54,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   isOwnProfile,
   isFollowing = false,
   followerCount = 0,
+  loading = false,
   onFollow,
   onEditProfile,
   onAvatarChange,
 }) => {
-  const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
 
   const handleAvatarClick = () => {
-    if (isOwnProfile && onAvatarChange) {
+    if (isOwnProfile && onAvatarChange && profile) {
       setAvatarDialogOpen(true);
     }
   };
@@ -86,8 +84,50 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
-  const joinedDate = profile.createdAt ? format(new Date(profile.createdAt), 'MMMM yyyy') : 'Unknown';
-  
+  const handleFileInputClick = () => {
+    fileInputRef.current?.click();
+  };
+
+
+  const getJoinedDate = () => {
+  if (!profile?.createdAt) return 'Unknown';
+  try {
+    const date = new Date(profile.createdAt);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Unknown';
+    return format(date, 'MMMM yyyy');
+  } catch {
+    return 'Unknown';
+  }
+};
+
+
+
+  // Show skeleton loading state
+  if (loading) {
+    return (
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+          <Skeleton variant="circular" width={120} height={120} />
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="60%" height={40} />
+            <Skeleton variant="text" width="40%" />
+            <Skeleton variant="text" width="80%" height={60} />
+            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Skeleton variant="rounded" width={80} height={32} />
+              <Skeleton variant="rounded" width={80} height={32} />
+              <Skeleton variant="rounded" width={80} height={32} />
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+    );
+  }
+
+  // Show nothing if no profile
+  if (!profile) {
+    return null;
+  }
 
   return (
     <>
@@ -129,7 +169,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 }}
                 onClick={handleAvatarClick}
               >
-                {profile.username[0].toUpperCase()}
+                {profile.username?.[0]?.toUpperCase() || '?'}
               </Avatar>
             </Badge>
 
@@ -146,9 +186,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Profile Info */}
           <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, flexWrap: 'wrap', gap: 1 }}>
               <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {profile.username}
+                {profile.username || 'Unknown User'}
               </Typography>
               
               {!isOwnProfile && (
@@ -174,7 +214,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </Box>
 
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {profile.email}
+              {profile.email || 'No email provided'}
             </Typography>
 
             {profile.bio && (
@@ -186,36 +226,31 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
               <Chip
                 icon={<Person />}
-                label={`Role: ${profile.role}`}
+                label={`Role: ${profile.role || 'user'}`}
                 variant="outlined"
                 size="small"
               />
               <Chip
                 icon={<CalendarToday />}
-                label={`Joined ${joinedDate}`}
+                label={`Joined ${getJoinedDate()}`}
                 variant="outlined"
                 size="small"
               />
-              <Chip
-                icon={<AccessTime />}
-               
-                variant="outlined"
-                size="small"
-              />
+         
             </Box>
 
             {stats && (
-              <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
+              <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap' }}>
                 <Tooltip title="Posts">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <PostAdd color="action" fontSize="small" />
-                    <Typography variant="body2">{stats.posts}</Typography>
+                    <Typography variant="body2">{stats.posts || 0}</Typography>
                   </Box>
                 </Tooltip>
                 <Tooltip title="Comments">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <Comment color="action" fontSize="small" />
-                    <Typography variant="body2">{stats.comments}</Typography>
+                    <Typography variant="body2">{stats.comments || 0}</Typography>
                   </Box>
                 </Tooltip>
                 <Tooltip title="Followers">
@@ -251,22 +286,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               src={profile.avatar}
               sx={{ width: 150, height: 150, fontSize: '4rem' }}
             >
-              {profile.username[0].toUpperCase()}
+              {profile.username?.[0]?.toUpperCase() || '?'}
             </Avatar>
             <Button
               variant="contained"
-              component="label"
+              onClick={handleFileInputClick}
               disabled={uploading}
               startIcon={uploading ? <CircularProgress size={20} /> : <PhotoCamera />}
             >
               Choose Image
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleFileChange}
-              />
             </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
           </Box>
         </DialogContent>
         <DialogActions>

@@ -31,8 +31,8 @@ import {
   Bookmark,
 } from '@mui/icons-material';
 import { formatDistanceToNow, format } from 'date-fns';
-import { UserProfile } from '../types/profile.types';
-import { useAuthStore } from '../store/authStore';
+import { UserProfile } from '../../types/profile.types';
+import { useAuthStore } from '../../store/authStore';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -47,7 +47,7 @@ interface ProfileHeaderProps {
   followerCount?: number;
   onFollow?: () => void;
   onEditProfile?: () => void;
-  onAvatarChange?: (file: File) => Promise<void>; // Note: Promise<void> not Promise<string>
+  onAvatarChange?: (file: File) => Promise<void>;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -77,7 +77,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
     setUploading(true);
     try {
-      await onAvatarChange(file); // This now expects Promise<void>
+      await onAvatarChange(file);
       setAvatarDialogOpen(false);
     } catch (error) {
       console.error('Failed to upload avatar:', error);
@@ -86,12 +86,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
   };
 
-  const handleFileInputClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const joinedDate = profile.createdAt ? format(new Date(profile.createdAt), 'MMMM yyyy') : 'Unknown';
-
+  
 
   return (
     <>
@@ -150,7 +146,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
           {/* Profile Info */}
           <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
               <Typography variant="h4" sx={{ fontWeight: 700 }}>
                 {profile.username}
               </Typography>
@@ -200,11 +196,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 variant="outlined"
                 size="small"
               />
-
+              <Chip
+                icon={<AccessTime />}
+               
+                variant="outlined"
+                size="small"
+              />
             </Box>
 
             {stats && (
-              <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
                 <Tooltip title="Posts">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <PostAdd color="action" fontSize="small" />
@@ -254,19 +255,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </Avatar>
             <Button
               variant="contained"
-              onClick={handleFileInputClick}
+              component="label"
               disabled={uploading}
               startIcon={uploading ? <CircularProgress size={20} /> : <PhotoCamera />}
             >
               Choose Image
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileChange}
+              />
             </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
           </Box>
         </DialogContent>
         <DialogActions>

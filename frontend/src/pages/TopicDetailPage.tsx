@@ -87,10 +87,12 @@ const TopicDetailPage: React.FC = () => {
     if (!id) return;
     
     try {
+      console.log('📥 Fetching topic:', id);
       const data = await topicService.getTopicById(id);
+      console.log('✅ Topic fetched:', data);
       setTopic(data);
     } catch (err: any) {
-      console.error('Failed to fetch topic:', err);
+      console.error('❌ Failed to fetch topic:', err);
       setError(err.response?.data?.error || 'Topic not found');
     }
   }, [id]);
@@ -103,17 +105,17 @@ const TopicDetailPage: React.FC = () => {
     setPostsError(null);
     
     try {
+      console.log('📥 Fetching posts for topic:', id, 'page:', page);
       const response = await postService.getPostsByTopic(id, page, pageSize);
       
-      // Ensure posts is always an array
       setPosts(response.data || []);
       setTotal(response.total || 0);
       setTotalPages(response.totalPages || 0);
       
     } catch (err: any) {
-      console.error('Failed to fetch posts:', err);
+      console.error('❌ Failed to fetch posts:', err);
       setPostsError(err.response?.data?.error || 'Failed to load posts');
-      setPosts([]); // Reset to empty array on error
+      setPosts([]);
     } finally {
       setPostsLoading(false);
     }
@@ -194,6 +196,7 @@ const TopicDetailPage: React.FC = () => {
 
   // Handle topic edit
   const handleEditTopic = () => {
+    console.log('📝 Opening edit modal for topic:', topic);
     setEditTopicModalOpen(true);
     handleMenuClose();
   };
@@ -205,6 +208,7 @@ const TopicDetailPage: React.FC = () => {
     }
     
     try {
+      console.log('🗑️ Deleting topic:', id);
       await topicService.deleteTopic(id!);
       addNotification({
         type: 'success',
@@ -212,7 +216,7 @@ const TopicDetailPage: React.FC = () => {
       });
       navigate('/topics');
     } catch (err) {
-      console.error('Failed to delete topic:', err);
+      console.error('❌ Failed to delete topic:', err);
       addNotification({
         type: 'error',
         message: 'Failed to delete topic',
@@ -233,22 +237,33 @@ const TopicDetailPage: React.FC = () => {
 
   // Handle topic update success
   const handleTopicUpdated = async () => {
-    await fetchTopic();
-    setEditTopicModalOpen(false);
-    addNotification({
-      type: 'success',
-      message: 'Topic updated successfully!',
-    });
+    console.log('🔄 Topic updated callback triggered');
+    try {
+      await fetchTopic();
+      console.log('✅ Topic refreshed successfully');
+      addNotification({
+        type: 'success',
+        message: 'Topic updated successfully!',
+      });
+    } catch (error) {
+      console.error('❌ Error refreshing topic:', error);
+      addNotification({
+        type: 'error',
+        message: 'Topic updated but failed to refresh',
+      });
+    }
   };
 
   // Handle post creation success
   const handlePostCreated = () => {
+    console.log('📝 Post created, refreshing posts...');
     fetchPosts();
     setCreatePostModalOpen(false);
   };
 
   // Handle post update success
   const handlePostUpdated = () => {
+    console.log('📝 Post updated, refreshing posts...');
     fetchPosts();
     setEditPostModalOpen(false);
     setSelectedPost(null);

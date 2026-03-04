@@ -51,6 +51,9 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const isAuthor = user?.id === post.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const canPin = isAdmin; // Admins can pin any post
+  const canEdit = isAuthor || isAdmin;
+  const canDelete = isAuthor || isAdmin;
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -113,6 +116,9 @@ const PostCard: React.FC<PostCardProps> = ({
         cursor: 'pointer',
         position: 'relative',
         transition: 'transform 0.2s, box-shadow 0.2s',
+        borderLeft: post.isPinned ? '4px solid' : 'none',
+        borderLeftColor: 'primary.main',
+        bgcolor: post.isPinned ? 'action.hover' : 'background.paper',
         '&:hover': {
           transform: 'translateY(-2px)',
           boxShadow: 4,
@@ -144,7 +150,7 @@ const PostCard: React.FC<PostCardProps> = ({
             )}
           </Box>
 
-          {(isAuthor || isAdmin) && (
+          {(canEdit || canPin) && (
             <>
               <IconButton size="small" onClick={handleMenuOpen}>
                 <MoreVert fontSize="small" />
@@ -154,17 +160,17 @@ const PostCard: React.FC<PostCardProps> = ({
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
               >
-                {isAuthor && (
+                {canEdit && (
                   <MenuItem onClick={handleEdit}>
                     <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
                   </MenuItem>
                 )}
-                {isAuthor && (
+                {canDelete && (
                   <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
                     <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
                   </MenuItem>
                 )}
-                {isAdmin && (
+                {canPin && (
                   <MenuItem onClick={handlePin}>
                     <PushPin fontSize="small" sx={{ mr: 1 }} />
                     {post.isPinned ? 'Unpin' : 'Pin'}
@@ -187,7 +193,7 @@ const PostCard: React.FC<PostCardProps> = ({
           gutterBottom 
           sx={{ 
             fontWeight: 600,
-            pr: 4 // Make room for menu
+            pr: 4
           }}
         >
           {post.title}

@@ -54,6 +54,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
   const isAuthor = currentUserId === comment.userId;
   const isAdmin = useAuthStore.getState().user?.role === 'admin' || useAuthStore.getState().user?.role === 'moderator';
   const canPin = isPostAuthor || isAdmin;
+  const canEdit = isAuthor || isAdmin;
+  const canDelete = isAuthor || isAdmin;
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -139,7 +141,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             {getUserInitial()}
           </Avatar>
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Typography variant="subtitle2" fontWeight={600}>
                 {getUserName()}
               </Typography>
@@ -172,7 +174,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Box>
 
         {/* Menu Button */}
-        {(isAuthor || canPin || isAdmin) && (
+        {(canEdit || canPin) && (
           <>
             <IconButton size="small" onClick={handleMenuOpen}>
               <MoreVert fontSize="small" />
@@ -182,12 +184,12 @@ const CommentCard: React.FC<CommentCardProps> = ({
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              {isAuthor && (
+              {canEdit && (
                 <MenuItem onClick={handleEdit}>
                   <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
                 </MenuItem>
               )}
-              {isAuthor && (
+              {canDelete && (
                 <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
                   <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
                 </MenuItem>
@@ -318,7 +320,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             <CommentCard
               key={reply.id}
               comment={reply}
-              onLike={() => onLike()}
+              onLike={onLike}
               onReply={onReply}
               onDelete={onDelete}
               onEdit={onEdit}

@@ -16,9 +16,15 @@ import CommentCard from './CommentCard';
 
 interface CommentSectionProps {
   postId: string;
+  onPinComment?: (commentId: string) => void;
+  isPostAuthor?: boolean;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
+const CommentSection: React.FC<CommentSectionProps> = ({ 
+  postId, 
+  onPinComment, 
+  isPostAuthor = false 
+}) => {
   const { isAuthenticated, user } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -91,6 +97,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     }
   };
 
+  const handlePin = async (commentId: string) => {
+    if (onPinComment) {
+      await onPinComment(commentId);
+      fetchComments();
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
@@ -135,7 +148,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
           onReply={(content) => handleReply(comment.id, content)}
           onDelete={() => handleDelete(comment.id)}
           onEdit={(content) => handleEdit(comment.id, content)}
+          onPin={() => handlePin(comment.id)}
           currentUserId={user?.id}
+          isPostAuthor={isPostAuthor}
         />
       ))}
     </Box>

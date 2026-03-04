@@ -154,7 +154,7 @@ func main() {
 
     }
 
-    router.GET("/api/topics/:topicId/pinned-posts", userHandler.GetPinnedPostsByTopic)
+    router.GET("/api/topics/:id/pinned-posts", userHandler.GetPinnedPostsByTopic)
     router.GET("/api/posts/:postId/pinned-comments", userHandler.GetPinnedCommentsByPost)
 
 

@@ -32,7 +32,6 @@ func NewUserHandler(
     }
 }
 
-// GetMyProfile - Get current user's profile
 func (h *UserHandler) GetMyProfile(c *gin.Context) {
     userID := c.GetString("userID")
     if userID == "" {
@@ -52,7 +51,6 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
         return
     }
 
-    // Get counts
     var postCount, commentCount int64
     h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
     h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
@@ -72,7 +70,6 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
     })
 }
 
-// GetUserProfile - Get another user's profile by ID
 func (h *UserHandler) GetUserProfile(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -87,7 +84,6 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
         return
     }
 
-    // Get counts
     var postCount, commentCount int64
     h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
     h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
@@ -105,7 +101,6 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
     })
 }
 
-// UpdateProfile - Update user profile
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
     userID := c.GetString("userID")
     uid, err := uuid.Parse(userID)
@@ -131,7 +126,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
     }
 
     if req.Username != "" && req.Username != user.Username {
-        // Check if username is taken
+   
         existing, _ := h.userRepo.FindByUsername(req.Username)
         if existing != nil {
             c.JSON(http.StatusConflict, gin.H{"error": "username already taken"})
@@ -158,7 +153,6 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
     })
 }
 
-// GetUserPosts - Get posts by user (with pinned posts first)
 func (h *UserHandler) GetUserPosts(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -173,10 +167,8 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     var posts []models.Post
     var total int64
 
-    // Get total count
     h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&total)
 
-    // Get posts with pinned first, then by date
     err = h.userRepo.GetDB().
         Where("user_id = ?", uid).
         Preload("Topic").
@@ -191,7 +183,6 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
         return
     }
 
-    // Get like and comment counts for each post
     for i := range posts {
         var likeCount, commentCount int64
         h.userRepo.GetDB().Model(&models.Like{}).Where("post_id = ?", posts[i].ID).Count(&likeCount)
@@ -222,10 +213,8 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
     var comments []models.Comment
     var total int64
 
-    // Get total count
     h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&total)
 
-    // Get comments with pinned first, then by date
     err = h.userRepo.GetDB().
         Where("user_id = ?", uid).
         Preload("Post").
@@ -240,7 +229,6 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
         return
     }
 
-    // Get like counts for each comment
     for i := range comments {
         var likeCount int64
         h.userRepo.GetDB().Model(&models.Like{}).Where("comment_id = ?", comments[i].ID).Count(&likeCount)
@@ -255,7 +243,6 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
     })
 }
 
-// GetUserStats - Get user statistics
 func (h *UserHandler) GetUserStats(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -276,7 +263,7 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
         "comments":        commentCount,
         "pinnedPosts":     pinnedPostCount,
         "pinnedComments":  pinnedCommentCount,
-        "joinedDate":      time.Now(), // You might want to get this from user record
+        "joinedDate":      time.Now(), 
     })
 }
 
@@ -304,7 +291,6 @@ func (h *UserHandler) GetPinnedPostsByTopic(c *gin.Context) {
     c.JSON(http.StatusOK, posts)
 }
 
-// GetPinnedCommentsByPost - Get comments pinned by post owner
 func (h *UserHandler) GetPinnedCommentsByPost(c *gin.Context) {
     postID := c.Param("postId")
     pid, err := uuid.Parse(postID)
@@ -313,7 +299,6 @@ func (h *UserHandler) GetPinnedCommentsByPost(c *gin.Context) {
         return
     }
 
-    // Get pinned comments in this post
     var comments []models.Comment
     err = h.userRepo.GetDB().
         Where("post_id = ? AND is_pinned = ?", pid, true).

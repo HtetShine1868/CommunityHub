@@ -50,12 +50,23 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
         return
     }
 
-    // Get counts
+    // Get counts using repository methods instead of direct db access
     var postCount, commentCount, followerCount, followingCount int64
-    h.userRepo.db.Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
-    h.userRepo.db.Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
+    
+    // You'll need to add these methods to your repositories
+    // For now, let's query through GORM models
+    if err := h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount).Error; err != nil {
+        postCount = 0
+    }
+    if err := h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount).Error; err != nil {
+        commentCount = 0
+    }
+    if err := h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount).Error; err != nil {
+        followerCount = 0
+    }
+    if err := h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount).Error; err != nil {
+        followingCount = 0
+    }
 
     c.JSON(http.StatusOK, gin.H{
         "id":             user.ID,
@@ -91,10 +102,11 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 
     // Get counts
     var postCount, commentCount, followerCount, followingCount int64
-    h.userRepo.db.Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
-    h.userRepo.db.Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
+    
+    h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
+    h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
+    h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
+    h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
 
     // Check if current user is following this user
     isFollowing := false
@@ -102,7 +114,7 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
     if currentUserID != "" {
         currUID, _ := uuid.Parse(currentUserID)
         var count int64
-        h.userRepo.db.Model(&models.Follow{}).
+        h.userRepo.GetDB().Model(&models.Follow{}).
             Where("follower_id = ? AND following_id = ?", currUID, uid).
             Count(&count)
         isFollowing = count > 0
@@ -218,7 +230,7 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
     var comments []models.Comment
     var total int64
 
-    query := h.userRepo.db.Model(&models.Comment{}).
+    query := h.userRepo.GetDB().Model(&models.Comment{}).
         Where("user_id = ?", uid).
         Preload("Post").
         Preload("Post.Topic").
@@ -250,13 +262,13 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
 
     var postCount, commentCount, followerCount, followingCount, likeCount int64
 
-    h.userRepo.db.Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
-    h.userRepo.db.Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
-    h.userRepo.db.Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
+    h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
+    h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
+    h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
+    h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
 
     // Count likes received on user's posts
-    h.userRepo.db.Model(&models.Like{}).
+    h.userRepo.GetDB().Model(&models.Like{}).
         Joins("JOIN posts ON posts.id = likes.post_id").
         Where("posts.user_id = ?", uid).
         Count(&likeCount)
@@ -285,7 +297,7 @@ func (h *UserHandler) GetSavedPosts(c *gin.Context) {
     var savedPosts []models.SavedPost
     var total int64
 
-    query := h.userRepo.db.Model(&models.SavedPost{}).
+    query := h.userRepo.GetDB().Model(&models.SavedPost{}).
         Where("user_id = ?", uid).
         Preload("Post").
         Preload("Post.User").
@@ -328,7 +340,7 @@ func (h *UserHandler) GetLikedPosts(c *gin.Context) {
     var likes []models.Like
     var total int64
 
-    query := h.userRepo.db.Model(&models.Like{}).
+    query := h.userRepo.GetDB().Model(&models.Like{}).
         Where("user_id = ? AND post_id IS NOT NULL", uid).
         Preload("Post").
         Preload("Post.User").
@@ -375,17 +387,17 @@ func (h *UserHandler) ToggleFollow(c *gin.Context) {
 
     // Check if already following
     var count int64
-    h.userRepo.db.Model(&models.Follow{}).
+    h.userRepo.GetDB().Model(&models.Follow{}).
         Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
         Count(&count)
 
     if count > 0 {
         // Unfollow
-        h.userRepo.db.Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
+        h.userRepo.GetDB().Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
             Delete(&models.Follow{})
 
         var newCount int64
-        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
+        h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
 
         c.JSON(http.StatusOK, gin.H{
             "following":     false,
@@ -397,13 +409,13 @@ func (h *UserHandler) ToggleFollow(c *gin.Context) {
             FollowerID:  followerUID,
             FollowingID: followingUID,
         }
-        if err := h.userRepo.db.Create(follow).Error; err != nil {
+        if err := h.userRepo.GetDB().Create(follow).Error; err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to follow user"})
             return
         }
 
         var newCount int64
-        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
+        h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
 
         c.JSON(http.StatusOK, gin.H{
             "following":     true,
@@ -430,7 +442,7 @@ func (h *UserHandler) IsFollowing(c *gin.Context) {
     }
 
     var count int64
-    h.userRepo.db.Model(&models.Follow{}).
+    h.userRepo.GetDB().Model(&models.Follow{}).
         Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
         Count(&count)
 

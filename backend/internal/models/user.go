@@ -32,3 +32,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 func (User) TableName() string {
     return "users"
 }
+
+func (r *UserRepository) GetDB() *gorm.DB {
+    return r.db
+}

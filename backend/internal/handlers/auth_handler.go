@@ -28,7 +28,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // Check if user exists
     existingUser, _ := h.userRepo.FindByEmail(req.Email)
     if existingUser != nil {
         c.JSON(http.StatusConflict, gin.H{"error": "email already exists"})
@@ -41,14 +40,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // Hash password
     hashedPassword, err := auth.HashPassword(req.Password)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
         return
     }
 
-    // Create user
     user := &models.User{
         Username:  req.Username,
         Email:     req.Email,
@@ -63,17 +60,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
         return
     }
 
-    // Generate token
     token, err := auth.GenerateToken(user.ID.String(), user.Username, user.Email)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
         return
     }
 
-    // Set cookie for Render
     setAuthCookie(c, token)
 
-    // Return token in response body
     c.JSON(http.StatusCreated, gin.H{
         "message": "user created successfully",
         "user": gin.H{
@@ -93,35 +87,29 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
 
-    // Find user by email
     user, err := h.userRepo.FindByEmail(req.Email)
     if err != nil || user == nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
         return
     }
 
-    // Check password
     if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
         return
     }
 
-    // Update last seen
     now := time.Now()
     user.LastSeen = &now
     h.userRepo.Update(user)
 
-    // Generate token
     token, err := auth.GenerateToken(user.ID.String(), user.Username, user.Email)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
         return
     }
 
-    // Set cookie for Render
     setAuthCookie(c, token)
 
-    // Return token in response body
     c.JSON(http.StatusOK, gin.H{
         "message": "login successful",
         "user": gin.H{
@@ -136,25 +124,24 @@ func (h *AuthHandler) Login(c *gin.Context) {
     })
 }
 
-// Helper function to set cookie with proper settings for Render
 func setAuthCookie(c *gin.Context, token string) {
     isProduction := os.Getenv("ENVIRONMENT") == "production"
     
     if isProduction {
-        // For Render - allow all subdomains
+
         c.SetCookie(
             "auth_token",
             token,
-            3600*24*7, // 7 days
+            3600*24*7, 
             "/",
-            ".onrender.com", // Dot prefix allows all render subdomains
-            true,            // Secure (HTTPS only)
-            true,            // HttpOnly
+            ".onrender.com", 
+            true,         
+            true,            
         )
-        // Also set SameSite=None explicitly for cross-site requests
+
         c.Header("Set-Cookie", "auth_token="+token+"; Path=/; Domain=.onrender.com; HttpOnly; Secure; SameSite=None; Max-Age=604800")
     } else {
-        // Local development
+      
         c.SetCookie(
             "auth_token",
             token,
@@ -171,7 +158,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
     isProduction := os.Getenv("ENVIRONMENT") == "production"
     
     if isProduction {
-        // Clear cookie for production
+      
         c.SetCookie(
             "auth_token",
             "",
@@ -183,7 +170,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
         )
         c.Header("Set-Cookie", "auth_token=; Path=/; Domain=.onrender.com; HttpOnly; Secure; SameSite=None; Max-Age=0")
     } else {
-        // Clear cookie for local
         c.SetCookie(
             "auth_token",
             "",

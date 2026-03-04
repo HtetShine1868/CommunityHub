@@ -28,19 +28,17 @@ type Claims struct {
     jwt.RegisteredClaims
 }
 
-// HashPassword hashes a password using bcrypt
+// HashPassword  using bcrypt
 func HashPassword(password string) (string, error) {
     bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
     return string(bytes), err
 }
 
-// CheckPasswordHash compares a password with its hash
 func CheckPasswordHash(password, hash string) bool {
     err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
     return err == nil
 }
 
-// GenerateToken generates a JWT token for a user
 func GenerateToken(userID, username, email string) (string, error) {
     claims := &Claims{
         UserID:   userID,
@@ -57,7 +55,6 @@ func GenerateToken(userID, username, email string) (string, error) {
     return token.SignedString(jwtSecret)
 }
 
-// ValidateToken validates a JWT token and returns the claims
 func ValidateToken(tokenString string) (*Claims, error) {
     token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
         if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

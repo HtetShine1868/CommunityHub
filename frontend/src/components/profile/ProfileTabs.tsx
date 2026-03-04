@@ -7,12 +7,12 @@ import {
   Typography,
   Pagination,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import {
   PostAdd,
   Comment,
-  Bookmark,
-  Favorite,
+  PushPin,
 } from '@mui/icons-material';
 import { Post } from '../../types/post.types';
 import { Comment as CommentType } from '../../types/comment.types';
@@ -36,23 +36,17 @@ interface ProfileTabsProps {
   onChange: (value: number) => void;
   posts: Post[];
   comments: CommentType[];
-  savedPosts: Post[];
-  likedPosts: Post[];
   loading: {
     posts: boolean;
     comments: boolean;
-    saved: boolean;
-    liked: boolean;
   };
   pagination: {
     posts: { page: number; total: number; onChange: (page: number) => void };
     comments: { page: number; total: number; onChange: (page: number) => void };
-    saved: { page: number; total: number; onChange: (page: number) => void };
-    liked: { page: number; total: number; onChange: (page: number) => void };
   };
   onPostLike?: (postId: string) => void;
   onCommentLike?: (commentId: string) => void;
-  isOwnProfile: boolean;
+  pageSize?: number;
 }
 
 const ProfileTabs: React.FC<ProfileTabsProps> = ({
@@ -60,17 +54,26 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
   onChange,
   posts,
   comments,
-  savedPosts,
-  likedPosts,
   loading,
   pagination,
   onPostLike,
   onCommentLike,
-  isOwnProfile,
+  pageSize = 10,
 }) => {
-  const pageSize = 10;
-
   const calculateTotalPages = (total: number) => Math.ceil(total / pageSize);
+
+  const renderPinnedBadge = (isPinned: boolean) => {
+    if (!isPinned) return null;
+    return (
+      <Chip
+        icon={<PushPin />}
+        label="Pinned"
+        size="small"
+        color="primary"
+        sx={{ ml: 1 }}
+      />
+    );
+  };
 
   return (
     <Paper sx={{ width: '100%' }}>
@@ -83,12 +86,6 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
       >
         <Tab icon={<PostAdd />} label="Posts" iconPosition="start" />
         <Tab icon={<Comment />} label="Comments" iconPosition="start" />
-        {isOwnProfile && (
-          <Tab icon={<Bookmark />} label="Saved" iconPosition="start" />
-        )}
-        {isOwnProfile && (
-          <Tab icon={<Favorite />} label="Liked" iconPosition="start" />
-        )}
       </Tabs>
 
       {/* Posts Tab */}
@@ -107,11 +104,13 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onLike={() => onPostLike?.(post.id)}
-                />
+                <Box key={post.id}>
+                  {post.isPinned && renderPinnedBadge(true)}
+                  <PostCard
+                    post={post}
+                    onLike={() => onPostLike?.(post.id)}
+                  />
+                </Box>
               ))}
             </Box>
             {pagination.posts.total > pageSize && (
@@ -144,14 +143,16 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
           <>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {comments.map((comment) => (
-                <CommentCard
-                  key={comment.id}
-                  comment={comment}
-                  onLike={() => onCommentLike?.(comment.id)}
-                  onReply={() => {}}
-                  onDelete={() => {}}
-                  onEdit={() => {}}
-                />
+                <Box key={comment.id}>
+                  {comment.isPinned && renderPinnedBadge(true)}
+                  <CommentCard
+                    comment={comment}
+                    onLike={() => onCommentLike?.(comment.id)}
+                    onReply={() => {}}
+                    onDelete={() => {}}
+                    onEdit={() => {}}
+                  />
+                </Box>
               ))}
             </Box>
             {pagination.comments.total > pageSize && (
@@ -167,84 +168,6 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
           </>
         )}
       </TabPanel>
-
-      {/* Saved Posts Tab */}
-      {isOwnProfile && (
-        <TabPanel value={value} index={2}>
-          {loading.saved ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : savedPosts.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="text.secondary">
-                No saved posts yet.
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {savedPosts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    onLike={() => onPostLike?.(post.id)}
-                  />
-                ))}
-              </Box>
-              {pagination.saved.total > pageSize && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Pagination
-                    count={calculateTotalPages(pagination.saved.total)}
-                    page={pagination.saved.page}
-                    onChange={(_, page) => pagination.saved.onChange(page)}
-                    color="primary"
-                  />
-                </Box>
-              )}
-            </>
-          )}
-        </TabPanel>
-      )}
-
-      {/* Liked Posts Tab */}
-      {isOwnProfile && (
-        <TabPanel value={value} index={3}>
-          {loading.liked ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : likedPosts.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="text.secondary">
-                No liked posts yet.
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {likedPosts.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    onLike={() => onPostLike?.(post.id)}
-                  />
-                ))}
-              </Box>
-              {pagination.liked.total > pageSize && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Pagination
-                    count={calculateTotalPages(pagination.liked.total)}
-                    page={pagination.liked.page}
-                    onChange={(_, page) => pagination.liked.onChange(page)}
-                    color="primary"
-                  />
-                </Box>
-              )}
-            </>
-          )}
-        </TabPanel>
-      )}
     </Paper>
   );
 };

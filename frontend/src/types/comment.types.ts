@@ -7,6 +7,7 @@ export interface Comment {
   userId: string;
   postId: string;
   parentId?: string;
+   isPinned: boolean; 
   isEdited: boolean;
   editedAt?: string;
   user?: User;

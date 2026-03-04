@@ -30,33 +30,18 @@ const ProfilePage: React.FC = () => {
     stats,
     posts,
     comments,
-    savedPosts,
-    likedPosts,
     loading: profileLoading,
     postsLoading,
     commentsLoading,
-    savedLoading,
-    likedLoading,
     error,
     isOwnProfile,
-    isFollowing,
-    followerCount,
     postsPage,
     commentsPage,
-    savedPage,
-    likedPage,
     postsTotal,
     commentsTotal,
-    savedTotal,
-    likedTotal,
     setPostsPage,
     setCommentsPage,
-    setSavedPage,
-    setLikedPage,
     updateProfile,
-    changePassword,
-    toggleFollow,
-    uploadAvatar,
   } = useProfile(userId);
 
   // Show loading while auth is being checked
@@ -122,12 +107,8 @@ const ProfilePage: React.FC = () => {
         profile={profile}
         stats={stats || undefined}
         isOwnProfile={isOwnProfile}
-        isFollowing={isFollowing}
-        followerCount={followerCount}
         loading={false}
-        onFollow={toggleFollow}
         onEditProfile={() => setEditModalOpen(true)}
-        onAvatarChange={uploadAvatar}
       />
 
       {/* Profile Tabs */}
@@ -136,13 +117,9 @@ const ProfilePage: React.FC = () => {
         onChange={setTabValue}
         posts={posts}
         comments={comments}
-        savedPosts={savedPosts}
-        likedPosts={likedPosts}
         loading={{
           posts: postsLoading,
           comments: commentsLoading,
-          saved: savedLoading,
-          liked: likedLoading,
         }}
         pagination={{
           posts: {
@@ -155,20 +132,9 @@ const ProfilePage: React.FC = () => {
             total: commentsTotal,
             onChange: setCommentsPage,
           },
-          saved: {
-            page: savedPage,
-            total: savedTotal,
-            onChange: setSavedPage,
-          },
-          liked: {
-            page: likedPage,
-            total: likedTotal,
-            onChange: setLikedPage,
-          },
         }}
         onPostLike={() => {}}
         onCommentLike={() => {}}
-        isOwnProfile={isOwnProfile}
       />
 
       {/* Edit Profile Modal */}
@@ -177,7 +143,6 @@ const ProfilePage: React.FC = () => {
         onClose={() => setEditModalOpen(false)}
         profile={profile}
         onUpdateProfile={updateProfile}
-        onChangePassword={changePassword}
       />
     </Container>
   );

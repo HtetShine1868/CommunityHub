@@ -133,6 +133,7 @@ func main() {
         api.POST("/posts/:id/comments", commentHandler.CreateComment)
         api.PUT("/comments/:id", commentHandler.UpdateComment)
         api.DELETE("/comments/:id", commentHandler.DeleteComment)
+        api.POST("/comments/:id/pin", commentHandler.PinComment)
         api.GET("/comments/:id/replies", commentHandler.GetReplies)
 
         // Likes

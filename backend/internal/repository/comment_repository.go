@@ -104,3 +104,6 @@ func (r *CommentRepository) Delete(id uuid.UUID) error {
     r.db.Where("parent_id = ?", id).Delete(&models.Comment{})
     return r.db.Delete(&models.Comment{}, "id = ?", id).Error
 }
+func (r *CommentRepository) GetDB() *gorm.DB {
+    return r.db
+}

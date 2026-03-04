@@ -179,4 +179,71 @@ func (h *CommentHandler) GetReplies(c *gin.Context) {
         "pageSize":   pageSize,
         "totalPages": (total + int64(pageSize) - 1) / int64(pageSize),
     })
+    // PinComment - Pin/unpin a comment (post owner or admin only)
+func (h *CommentHandler) PinComment(c *gin.Context) {
+    id, err := uuid.Parse(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment id"})
+        return
+    }
+
+    comment, err := h.commentRepo.FindByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
+        return
+    }
+
+    // Get the post to check ownership
+    post, err := h.postRepo.FindByID(comment.PostID)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+        return
+    }
+
+    // Check permissions: post owner or admin
+    userID := c.GetString("userID")
+    role := c.GetString("role")
+    
+    if post.UserID.String() != userID && role != "admin" && role != "moderator" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "only post owner or admin can pin comments"})
+        return
+    }
+
+    // Toggle pin status
+    comment.IsPinned = !comment.IsPinned
+    comment.UpdatedAt = time.Now()
+
+    if err := h.commentRepo.Update(comment); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "comment pin status updated",
+        "isPinned": comment.IsPinned,
+    })
+}
+
+// GetPinnedComments - Get pinned comments for a post
+func (h *CommentHandler) GetPinnedComments(c *gin.Context) {
+    postID, err := uuid.Parse(c.Param("postId"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
+        return
+    }
+
+    var comments []models.Comment
+    err = h.commentRepo.GetDB().
+        Where("post_id = ? AND is_pinned = ?", postID, true).
+        Preload("User").
+        Order("created_at asc").
+        Find(&comments).Error
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch pinned comments"})
+        return
+    }
+
+    c.JSON(http.StatusOK, comments)
+}
 }

@@ -7,6 +7,7 @@ import { useAuthStore } from '../store/authStore';
 
 export const useComments = (postId: string) => {
   const [comments, setComments] = useState<Comment[]>([]);
+  const [pinnedComments, setPinnedComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addNotification } = useUIStore();
@@ -18,6 +19,10 @@ export const useComments = (postId: string) => {
     try {
       const response = await commentService.getCommentsByPost(postId);
       setComments(response.data);
+      
+      // Also fetch pinned comments separately
+      const pinned = await commentService.getPinnedComments(postId);
+      setPinnedComments(pinned);
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Failed to fetch comments';
       setError(errorMsg);
@@ -144,14 +149,43 @@ export const useComments = (postId: string) => {
     }
   };
 
+  const togglePin = async (commentId: string) => {
+    try {
+      const { isPinned } = await commentService.togglePin(commentId);
+      
+      // Update in comments list
+      const updatePinInTree = (commentsList: Comment[]): Comment[] => {
+        return commentsList.map((c) => {
+          if (c.id === commentId) {
+            return { ...c, isPinned };
+          }
+          if (c.replies) {
+            return { ...c, replies: updatePinInTree(c.replies) };
+          }
+          return c;
+        });
+      };
+      
+      setComments(updatePinInTree(comments));
+      addNotification({ 
+        type: 'success', 
+        message: isPinned ? 'Comment pinned!' : 'Comment unpinned!' 
+      });
+    } catch (err: any) {
+      addNotification({ type: 'error', message: 'Failed to toggle pin' });
+    }
+  };
+
   return {
     comments,
+    pinnedComments,
     loading,
     error,
     createComment,
     updateComment,
     deleteComment,
     toggleLike,
+    togglePin,
     refresh: fetchComments,
   };
 };

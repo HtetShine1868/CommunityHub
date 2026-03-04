@@ -9,6 +9,11 @@ export const commentService = {
     return response.data;
   },
 
+  async getPinnedComments(postId: string): Promise<Comment[]> {
+    const response = await api.get(`/posts/${postId}/pinned-comments`);
+    return response.data;
+  },
+
   async createComment(postId: string, data: CreateCommentData): Promise<Comment> {
     const response = await api.post(`/posts/${postId}/comments`, data);
     return response.data;
@@ -21,6 +26,11 @@ export const commentService = {
 
   async deleteComment(id: string): Promise<void> {
     await api.delete(`/comments/${id}`);
+  },
+
+  async togglePin(id: string): Promise<{ isPinned: boolean }> {
+    const response = await api.post(`/comments/${id}/pin`);
+    return response.data;
   },
 
   async getReplies(commentId: string, page = 1, pageSize = 10): Promise<PaginatedResponse<Comment>> {

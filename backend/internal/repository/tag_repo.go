@@ -35,25 +35,22 @@ func (r *TagRepository) FindOrCreate(name string) (*models.Tag, error) {
 }
 
 func (r *TagRepository) UpdatePostTags(postID string, tagNames []string) error {
-    // Parse postID to uuid.UUID
+  
     postUUID, err := uuid.Parse(postID)
     if err != nil {
         return err
     }
 
-    // Start transaction
     tx := r.db.Begin()
     if tx.Error != nil {
         return tx.Error
     }
 
-    // Remove existing tags
     if err := tx.Exec("DELETE FROM post_tags WHERE post_id = ?", postUUID).Error; err != nil {
         tx.Rollback()
         return err
     }
 
-    // Add new tags
     for _, name := range tagNames {
         tag, err := r.FindOrCreate(name)
         if err != nil {

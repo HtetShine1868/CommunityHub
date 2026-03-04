@@ -18,7 +18,7 @@ func NewTopicRepository(db *gorm.DB) *TopicRepository {
 }
 
 func (r *TopicRepository) Create(topic *models.Topic) error {
-    // Ensure ID is generated if not set
+
     if topic.ID == uuid.Nil {
         topic.ID = uuid.New()
     }
@@ -29,7 +29,6 @@ func (r *TopicRepository) Create(topic *models.Topic) error {
         return result.Error
     }
 
-    // Load the user data
     r.db.Preload("User").First(topic, topic.ID)
     return nil
 }

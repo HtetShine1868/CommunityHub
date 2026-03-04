@@ -54,7 +54,6 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         return
     }
 
-    // Verify post exists
     _, err = h.postRepo.FindByID(postID)
     if err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
@@ -85,7 +84,6 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         return
     }
 
-    // Fetch the created comment with user data
     comment, _ = h.commentRepo.FindByID(comment.ID)
 
     c.JSON(http.StatusCreated, comment)

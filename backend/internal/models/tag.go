@@ -27,7 +27,6 @@ func (t *Tag) BeforeCreate(tx *gorm.DB) error {
     return nil
 }
 
-// BeforeUpdate - Update timestamp
 func (t *Tag) BeforeUpdate(tx *gorm.DB) error {
     t.UpdatedAt = time.Now()
     return nil

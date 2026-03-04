@@ -16,17 +16,20 @@ type UserHandler struct {
     userRepo    *repository.UserRepository
     postRepo    *repository.PostRepository
     commentRepo *repository.CommentRepository
+    topicRepo   *repository.TopicRepository
 }
 
 func NewUserHandler(
     userRepo *repository.UserRepository,
     postRepo *repository.PostRepository,
     commentRepo *repository.CommentRepository,
+    topicRepo *repository.TopicRepository,
 ) *UserHandler {
     return &UserHandler{
         userRepo:    userRepo,
         postRepo:    postRepo,
         commentRepo: commentRepo,
+        topicRepo:   topicRepo,
     }
 }
 
@@ -50,38 +53,23 @@ func (h *UserHandler) GetMyProfile(c *gin.Context) {
         return
     }
 
-    // Get counts using repository methods instead of direct db access
-    var postCount, commentCount, followerCount, followingCount int64
-    
-    // You'll need to add these methods to your repositories
-    // For now, let's query through GORM models
-    if err := h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount).Error; err != nil {
-        postCount = 0
-    }
-    if err := h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount).Error; err != nil {
-        commentCount = 0
-    }
-    if err := h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount).Error; err != nil {
-        followerCount = 0
-    }
-    if err := h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount).Error; err != nil {
-        followingCount = 0
-    }
+    // Get counts
+    var postCount, commentCount int64
+    h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
+    h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
 
     c.JSON(http.StatusOK, gin.H{
-        "id":             user.ID,
-        "username":       user.Username,
-        "email":          user.Email,
-        "bio":            user.Bio,
-        "avatar":         user.Avatar,
-        "role":           user.Role,
-        "createdAt":      user.CreatedAt,
-        "updatedAt":      user.UpdatedAt,
-        "lastSeen":       user.LastSeen,
-        "postCount":      postCount,
-        "commentCount":   commentCount,
-        "followerCount":  followerCount,
-        "followingCount": followingCount,
+        "id":           user.ID,
+        "username":     user.Username,
+        "email":        user.Email,
+        "bio":          user.Bio,
+        "avatar":       user.Avatar,
+        "role":         user.Role,
+        "createdAt":    user.CreatedAt,
+        "updatedAt":    user.UpdatedAt,
+        "lastSeen":     user.LastSeen,
+        "postCount":    postCount,
+        "commentCount": commentCount,
     })
 }
 
@@ -101,38 +89,20 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
     }
 
     // Get counts
-    var postCount, commentCount, followerCount, followingCount int64
-    
+    var postCount, commentCount int64
     h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
     h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
-    h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
-    h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
-
-    // Check if current user is following this user
-    isFollowing := false
-    currentUserID := c.GetString("userID")
-    if currentUserID != "" {
-        currUID, _ := uuid.Parse(currentUserID)
-        var count int64
-        h.userRepo.GetDB().Model(&models.Follow{}).
-            Where("follower_id = ? AND following_id = ?", currUID, uid).
-            Count(&count)
-        isFollowing = count > 0
-    }
 
     c.JSON(http.StatusOK, gin.H{
-        "id":             user.ID,
-        "username":       user.Username,
-        "bio":            user.Bio,
-        "avatar":         user.Avatar,
-        "role":           user.Role,
-        "createdAt":      user.CreatedAt,
-        "lastSeen":       user.LastSeen,
-        "postCount":      postCount,
-        "commentCount":   commentCount,
-        "followerCount":  followerCount,
-        "followingCount": followingCount,
-        "isFollowing":    isFollowing,
+        "id":           user.ID,
+        "username":     user.Username,
+        "bio":          user.Bio,
+        "avatar":       user.Avatar,
+        "role":         user.Role,
+        "createdAt":    user.CreatedAt,
+        "lastSeen":     user.LastSeen,
+        "postCount":    postCount,
+        "commentCount": commentCount,
     })
 }
 
@@ -189,7 +159,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
     })
 }
 
-// GetUserPosts - Get posts by user
+// GetUserPosts - Get posts by user (with pinned posts first)
 func (h *UserHandler) GetUserPosts(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -201,10 +171,34 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
     pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 
-    posts, total, err := h.postRepo.FindByUser(uid, page, pageSize)
+    var posts []models.Post
+    var total int64
+
+    // Get total count
+    h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&total)
+
+    // Get posts with pinned first, then by date
+    err = h.userRepo.GetDB().
+        Where("user_id = ?", uid).
+        Preload("Topic").
+        Preload("Tags").
+        Order("is_pinned desc, created_at desc").
+        Offset((page - 1) * pageSize).
+        Limit(pageSize).
+        Find(&posts).Error
+
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch posts"})
         return
+    }
+
+    // Get like and comment counts for each post
+    for i := range posts {
+        var likeCount, commentCount int64
+        h.userRepo.GetDB().Model(&models.Like{}).Where("post_id = ?", posts[i].ID).Count(&likeCount)
+        h.userRepo.GetDB().Model(&models.Comment{}).Where("post_id = ?", posts[i].ID).Count(&commentCount)
+        posts[i].LikeCount = likeCount
+        posts[i].CommentCount = commentCount
     }
 
     c.JSON(http.StatusOK, gin.H{
@@ -215,7 +209,7 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     })
 }
 
-// GetUserComments - Get comments by user
+// GetUserComments - Get comments by user (with pinned comments first)
 func (h *UserHandler) GetUserComments(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -230,17 +224,29 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
     var comments []models.Comment
     var total int64
 
-    query := h.userRepo.GetDB().Model(&models.Comment{}).
+    // Get total count
+    h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&total)
+
+    // Get comments with pinned first, then by date
+    err = h.userRepo.GetDB().
         Where("user_id = ?", uid).
         Preload("Post").
         Preload("Post.Topic").
-        Order("created_at desc")
+        Order("is_pinned desc, created_at desc").
+        Offset((page - 1) * pageSize).
+        Limit(pageSize).
+        Find(&comments).Error
 
-    query.Count(&total)
-    err = query.Offset((page-1)*pageSize).Limit(pageSize).Find(&comments).Error
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch comments"})
         return
+    }
+
+    // Get like counts for each comment
+    for i := range comments {
+        var likeCount int64
+        h.userRepo.GetDB().Model(&models.Like{}).Where("comment_id = ?", comments[i].ID).Count(&likeCount)
+        comments[i].LikeCount = likeCount
     }
 
     c.JSON(http.StatusOK, gin.H{
@@ -260,191 +266,76 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
         return
     }
 
-    var postCount, commentCount, followerCount, followingCount, likeCount int64
+    var postCount, commentCount, pinnedPostCount, pinnedCommentCount int64
 
     h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ?", uid).Count(&postCount)
     h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
-    h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
-    h.userRepo.GetDB().Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
-
-    // Count likes received on user's posts
-    h.userRepo.GetDB().Model(&models.Like{}).
-        Joins("JOIN posts ON posts.id = likes.post_id").
-        Where("posts.user_id = ?", uid).
-        Count(&likeCount)
+    h.userRepo.GetDB().Model(&models.Post{}).Where("user_id = ? AND is_pinned = ?", uid, true).Count(&pinnedPostCount)
+    h.userRepo.GetDB().Model(&models.Comment{}).Where("user_id = ? AND is_pinned = ?", uid, true).Count(&pinnedCommentCount)
 
     c.JSON(http.StatusOK, gin.H{
-        "posts":     postCount,
-        "comments":  commentCount,
-        "followers": followerCount,
-        "following": followingCount,
-        "likes":     likeCount,
+        "posts":           postCount,
+        "comments":        commentCount,
+        "pinnedPosts":     pinnedPostCount,
+        "pinnedComments":  pinnedCommentCount,
+        "joinedDate":      time.Now(), // You might want to get this from user record
     })
 }
 
-// GetSavedPosts - Get user's saved posts
-func (h *UserHandler) GetSavedPosts(c *gin.Context) {
-    userID := c.GetString("userID")
-    uid, err := uuid.Parse(userID)
+// GetPinnedPostsByTopic - Get posts pinned by topic creator in a specific topic
+func (h *UserHandler) GetPinnedPostsByTopic(c *gin.Context) {
+    topicID := c.Param("topicId")
+    tid, err := uuid.Parse(topicID)
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid topic ID"})
         return
     }
 
-    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-    pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
-
-    var savedPosts []models.SavedPost
-    var total int64
-
-    query := h.userRepo.GetDB().Model(&models.SavedPost{}).
-        Where("user_id = ?", uid).
-        Preload("Post").
-        Preload("Post.User").
-        Preload("Post.Topic").
-        Order("created_at desc")
-
-    query.Count(&total)
-    err = query.Offset((page-1)*pageSize).Limit(pageSize).Find(&savedPosts).Error
+    // Get the topic to check creator
+    topic, err := h.topicRepo.FindByID(tid)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch saved posts"})
+        c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
         return
     }
 
-    // Extract posts from saved posts
-    posts := make([]models.Post, len(savedPosts))
-    for i, saved := range savedPosts {
-        posts[i] = *saved.Post
+    // Get pinned posts in this topic
+    var posts []models.Post
+    err = h.userRepo.GetDB().
+        Where("topic_id = ? AND is_pinned = ?", tid, true).
+        Preload("User").
+        Preload("Tags").
+        Order("created_at desc").
+        Find(&posts).Error
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch pinned posts"})
+        return
     }
 
-    c.JSON(http.StatusOK, gin.H{
-        "data":     posts,
-        "total":    total,
-        "page":     page,
-        "pageSize": pageSize,
-    })
+    c.JSON(http.StatusOK, posts)
 }
 
-// GetLikedPosts - Get user's liked posts
-func (h *UserHandler) GetLikedPosts(c *gin.Context) {
-    userID := c.GetString("userID")
-    uid, err := uuid.Parse(userID)
+// GetPinnedCommentsByPost - Get comments pinned by post owner
+func (h *UserHandler) GetPinnedCommentsByPost(c *gin.Context) {
+    postID := c.Param("postId")
+    pid, err := uuid.Parse(postID)
     if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
         return
     }
 
-    page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-    pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+    // Get pinned comments in this post
+    var comments []models.Comment
+    err = h.userRepo.GetDB().
+        Where("post_id = ? AND is_pinned = ?", pid, true).
+        Preload("User").
+        Order("created_at asc").
+        Find(&comments).Error
 
-    var likes []models.Like
-    var total int64
-
-    query := h.userRepo.GetDB().Model(&models.Like{}).
-        Where("user_id = ? AND post_id IS NOT NULL", uid).
-        Preload("Post").
-        Preload("Post.User").
-        Preload("Post.Topic").
-        Order("created_at desc")
-
-    query.Count(&total)
-    err = query.Offset((page-1)*pageSize).Limit(pageSize).Find(&likes).Error
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch liked posts"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch pinned comments"})
         return
     }
 
-    // Extract posts from likes
-    posts := make([]models.Post, len(likes))
-    for i, like := range likes {
-        posts[i] = *like.Post
-    }
-
-    c.JSON(http.StatusOK, gin.H{
-        "data":     posts,
-        "total":    total,
-        "page":     page,
-        "pageSize": pageSize,
-    })
-}
-
-// ToggleFollow - Follow/unfollow a user
-func (h *UserHandler) ToggleFollow(c *gin.Context) {
-    followerID := c.GetString("userID")
-    followingID := c.Param("userId")
-
-    if followerID == followingID {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
-        return
-    }
-
-    followerUID, _ := uuid.Parse(followerID)
-    followingUID, err := uuid.Parse(followingID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    // Check if already following
-    var count int64
-    h.userRepo.GetDB().Model(&models.Follow{}).
-        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-        Count(&count)
-
-    if count > 0 {
-        // Unfollow
-        h.userRepo.GetDB().Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-            Delete(&models.Follow{})
-
-        var newCount int64
-        h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
-
-        c.JSON(http.StatusOK, gin.H{
-            "following":     false,
-            "followerCount": newCount,
-        })
-    } else {
-        // Follow
-        follow := &models.Follow{
-            FollowerID:  followerUID,
-            FollowingID: followingUID,
-        }
-        if err := h.userRepo.GetDB().Create(follow).Error; err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to follow user"})
-            return
-        }
-
-        var newCount int64
-        h.userRepo.GetDB().Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
-
-        c.JSON(http.StatusOK, gin.H{
-            "following":     true,
-            "followerCount": newCount,
-        })
-    }
-}
-
-// IsFollowing - Check if current user is following another user
-func (h *UserHandler) IsFollowing(c *gin.Context) {
-    followerID := c.GetString("userID")
-    followingID := c.Param("userId")
-
-    if followerID == "" {
-        c.JSON(http.StatusOK, gin.H{"following": false})
-        return
-    }
-
-    followerUID, _ := uuid.Parse(followerID)
-    followingUID, err := uuid.Parse(followingID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    var count int64
-    h.userRepo.GetDB().Model(&models.Follow{}).
-        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-        Count(&count)
-
-    c.JSON(http.StatusOK, gin.H{"following": count > 0})
+    c.JSON(http.StatusOK, comments)
 }

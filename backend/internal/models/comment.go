@@ -13,22 +13,24 @@ type Comment struct {
     UserID    uuid.UUID      `gorm:"column:user_id;not null;index" json:"userId"`
     PostID    uuid.UUID      `gorm:"column:post_id;not null;index" json:"postId"`
     ParentID  *uuid.UUID     `gorm:"column:parent_id;index" json:"parentId,omitempty"`
+    IsPinned  bool           `gorm:"column:is_pinned;default:false" json:"isPinned"`
     IsEdited  bool           `gorm:"column:is_edited;default:false" json:"isEdited"`
     EditedAt  *time.Time     `gorm:"column:edited_at" json:"editedAt,omitempty"`
     CreatedAt time.Time      `gorm:"column:created_at" json:"createdAt"`
     UpdatedAt time.Time      `gorm:"column:updated_at" json:"updatedAt"`
     DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
-    
-    // Relationships
-    User    User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
-    Replies []Comment `gorm:"foreignKey:ParentID" json:"replies,omitempty"`
+
+
+    LikeCount  int64          `gorm:"-" json:"likeCount"`
+    ReplyCount int64          `gorm:"-" json:"replyCount"`
+    User      User            `gorm:"foreignKey:UserID" json:"user,omitempty"`
+    Replies   []Comment       `gorm:"foreignKey:ParentID" json:"replies,omitempty"`
 }
 
 func (Comment) TableName() string {
     return "comments"
 }
 
-// BeforeCreate - Generate UUID if not set
 func (c *Comment) BeforeCreate(tx *gorm.DB) error {
     if c.ID == uuid.Nil {
         c.ID = uuid.New()
@@ -37,7 +39,7 @@ func (c *Comment) BeforeCreate(tx *gorm.DB) error {
     return nil
 }
 
-// BeforeUpdate - Update timestamp
+
 func (c *Comment) BeforeUpdate(tx *gorm.DB) error {
     c.UpdatedAt = time.Now()
     return nil

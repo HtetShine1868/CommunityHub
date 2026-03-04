@@ -21,7 +21,7 @@ func (r *LikeRepository) TogglePostLike(userID, postID uuid.UUID) (bool, error) 
     err := r.db.Where("user_id = ? AND post_id = ?", userID, postID).First(&like).Error
 
     if errors.Is(err, gorm.ErrRecordNotFound) {
-        // Create like
+    
         like = models.Like{
             UserID: userID,
             PostID: &postID,
@@ -29,7 +29,6 @@ func (r *LikeRepository) TogglePostLike(userID, postID uuid.UUID) (bool, error) 
         return true, r.db.Create(&like).Error
     }
 
-    // Delete like
     return false, r.db.Delete(&like).Error
 }
 
@@ -38,7 +37,7 @@ func (r *LikeRepository) ToggleCommentLike(userID, commentID uuid.UUID) (bool, e
     err := r.db.Where("user_id = ? AND comment_id = ?", userID, commentID).First(&like).Error
 
     if errors.Is(err, gorm.ErrRecordNotFound) {
-        // Create like
+
         like = models.Like{
             UserID:    userID,
             CommentID: &commentID,
@@ -46,7 +45,6 @@ func (r *LikeRepository) ToggleCommentLike(userID, commentID uuid.UUID) (bool, e
         return true, r.db.Create(&like).Error
     }
 
-    // Delete like
     return false, r.db.Delete(&like).Error
 }
 

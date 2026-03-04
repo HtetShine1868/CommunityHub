@@ -24,7 +24,6 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
     var comments []models.Comment
     var total int64
 
-    // Get top-level comments only (no parent)
     query := r.db.Model(&models.Comment{}).
         Where("post_id = ? AND parent_id IS NULL", postID).
         Preload("User")
@@ -42,7 +41,6 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
         return nil, 0, err
     }
 
-    // Load replies for each comment
     for i := range comments {
         var replies []models.Comment
         r.db.Where("parent_id = ?", comments[i].ID).
@@ -83,8 +81,7 @@ func (r *CommentRepository) FindByID(id uuid.UUID) (*models.Comment, error) {
     if err != nil {
         return nil, err
     }
-    
-    // Load replies
+ 
     var replies []models.Comment
     r.db.Where("parent_id = ?", comment.ID).
         Preload("User").
@@ -103,7 +100,7 @@ func (r *CommentRepository) Update(comment *models.Comment) error {
 }
 
 func (r *CommentRepository) Delete(id uuid.UUID) error {
-    // Delete all replies first
+
     r.db.Where("parent_id = ?", id).Delete(&models.Comment{})
     return r.db.Delete(&models.Comment{}, "id = ?", id).Error
 }

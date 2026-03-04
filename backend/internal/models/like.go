@@ -20,7 +20,6 @@ func (Like) TableName() string {
     return "likes"
 }
 
-// BeforeCreate - Generate UUID if not set
 func (l *Like) BeforeCreate(tx *gorm.DB) error {
     if l.ID == uuid.Nil {
         l.ID = uuid.New()

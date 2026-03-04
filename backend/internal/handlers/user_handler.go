@@ -4,8 +4,7 @@ import (
     "communityHub/internal/models"
     "communityHub/internal/repository"
     "net/http"
-    "os"
-    "path/filepath"
+    "strconv"
     "time"
 
     "github.com/gin-gonic/gin"
@@ -178,118 +177,6 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
     })
 }
 
-// UploadAvatar - Upload user avatar
-func (h *UserHandler) UploadAvatar(c *gin.Context) {
-    userID := c.GetString("userID")
-    uid, err := uuid.Parse(userID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    file, err := c.FormFile("avatar")
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "no file uploaded"})
-        return
-    }
-
-    // Validate file type
-    ext := filepath.Ext(file.Filename)
-    if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file type"})
-        return
-    }
-
-    // Generate filename
-    filename := userID + ext
-    uploadDir := "uploads/avatars"
-    if err := os.MkdirAll(uploadDir, 0755); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create upload directory"})
-        return
-    }
-
-    filepath := filepath.Join(uploadDir, filename)
-    if err := c.SaveUploadedFile(file, filepath); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
-        return
-    }
-
-    // Update user avatar in database
-    user, err := h.userRepo.FindByID(uid)
-    if err != nil || user == nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-        return
-    }
-
-    avatarURL := "/uploads/avatars/" + filename
-    user.Avatar = avatarURL
-    user.UpdatedAt = time.Now()
-
-    if err := h.userRepo.Update(user); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update avatar"})
-        return
-    }
-
-    c.JSON(http.StatusOK, gin.H{
-        "avatarUrl": avatarURL,
-    })
-}
-
-// ChangePassword - Change user password
-func (h *UserHandler) ChangePassword(c *gin.Context) {
-    userID := c.GetString("userID")
-    uid, err := uuid.Parse(userID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    var req struct {
-        CurrentPassword string `json:"currentPassword" binding:"required"`
-        NewPassword     string `json:"newPassword" binding:"required,min=6"`
-        ConfirmPassword string `json:"confirmPassword" binding:"required"`
-    }
-
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    if req.NewPassword != req.ConfirmPassword {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "passwords do not match"})
-        return
-    }
-
-    user, err := h.userRepo.FindByID(uid)
-    if err != nil || user == nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
-        return
-    }
-
-    // Verify current password
-    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)); err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "current password is incorrect"})
-        return
-    }
-
-    // Hash new password
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
-        return
-    }
-
-    user.Password = string(hashedPassword)
-    user.UpdatedAt = time.Now()
-
-    if err := h.userRepo.Update(user); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
-        return
-    }
-
-    c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
-}
-
 // GetUserPosts - Get posts by user
 func (h *UserHandler) GetUserPosts(c *gin.Context) {
     userID := c.Param("userId")
@@ -309,9 +196,9 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "data":  posts,
-        "total": total,
-        "page":  page,
+        "data":     posts,
+        "total":    total,
+        "page":     page,
         "pageSize": pageSize,
     })
 }
@@ -345,9 +232,9 @@ func (h *UserHandler) GetUserComments(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "data":  comments,
-        "total": total,
-        "page":  page,
+        "data":     comments,
+        "total":    total,
+        "page":     page,
         "pageSize": pageSize,
     })
 }
@@ -367,7 +254,7 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
     h.userRepo.db.Model(&models.Comment{}).Where("user_id = ?", uid).Count(&commentCount)
     h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", uid).Count(&followerCount)
     h.userRepo.db.Model(&models.Follow{}).Where("follower_id = ?", uid).Count(&followingCount)
-    
+
     // Count likes received on user's posts
     h.userRepo.db.Model(&models.Like{}).
         Joins("JOIN posts ON posts.id = likes.post_id").
@@ -375,95 +262,12 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
         Count(&likeCount)
 
     c.JSON(http.StatusOK, gin.H{
-        "posts":    postCount,
-        "comments": commentCount,
+        "posts":     postCount,
+        "comments":  commentCount,
         "followers": followerCount,
         "following": followingCount,
-        "likes":    likeCount,
-        "joinedDate": time.Now(), // You might want to get this from user record
-        "lastActive": time.Now(),
+        "likes":     likeCount,
     })
-}
-
-// ToggleFollow - Follow/unfollow a user
-func (h *UserHandler) ToggleFollow(c *gin.Context) {
-    followerID := c.GetString("userID")
-    followingID := c.Param("userId")
-
-    if followerID == followingID {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
-        return
-    }
-
-    followerUID, _ := uuid.Parse(followerID)
-    followingUID, err := uuid.Parse(followingID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    // Check if already following
-    var count int64
-    h.userRepo.db.Model(&models.Follow{}).
-        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-        Count(&count)
-
-    if count > 0 {
-        // Unfollow
-        h.userRepo.db.Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-            Delete(&models.Follow{})
-        
-        var newCount int64
-        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
-        
-        c.JSON(http.StatusOK, gin.H{
-            "following": false,
-            "followerCount": newCount,
-        })
-    } else {
-        // Follow
-        follow := &models.Follow{
-            FollowerID:  followerUID,
-            FollowingID: followingUID,
-        }
-        if err := h.userRepo.db.Create(follow).Error; err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to follow user"})
-            return
-        }
-
-        var newCount int64
-        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
-        
-        c.JSON(http.StatusOK, gin.H{
-            "following": true,
-            "followerCount": newCount,
-        })
-    }
-}
-
-// IsFollowing - Check if current user is following another user
-func (h *UserHandler) IsFollowing(c *gin.Context) {
-    followerID := c.GetString("userID")
-    followingID := c.Param("userId")
-
-    if followerID == "" {
-        c.JSON(http.StatusOK, gin.H{"following": false})
-        return
-    }
-
-    followerUID, _ := uuid.Parse(followerID)
-    followingUID, err := uuid.Parse(followingID)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-        return
-    }
-
-    var count int64
-    h.userRepo.db.Model(&models.Follow{}).
-        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
-        Count(&count)
-
-    c.JSON(http.StatusOK, gin.H{"following": count > 0})
 }
 
 // GetSavedPosts - Get user's saved posts
@@ -498,13 +302,13 @@ func (h *UserHandler) GetSavedPosts(c *gin.Context) {
     // Extract posts from saved posts
     posts := make([]models.Post, len(savedPosts))
     for i, saved := range savedPosts {
-        posts[i] = saved.Post
+        posts[i] = *saved.Post
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "data":  posts,
-        "total": total,
-        "page":  page,
+        "data":     posts,
+        "total":    total,
+        "page":     page,
         "pageSize": pageSize,
     })
 }
@@ -545,9 +349,90 @@ func (h *UserHandler) GetLikedPosts(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, gin.H{
-        "data":  posts,
-        "total": total,
-        "page":  page,
+        "data":     posts,
+        "total":    total,
+        "page":     page,
         "pageSize": pageSize,
     })
+}
+
+// ToggleFollow - Follow/unfollow a user
+func (h *UserHandler) ToggleFollow(c *gin.Context) {
+    followerID := c.GetString("userID")
+    followingID := c.Param("userId")
+
+    if followerID == followingID {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "cannot follow yourself"})
+        return
+    }
+
+    followerUID, _ := uuid.Parse(followerID)
+    followingUID, err := uuid.Parse(followingID)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        return
+    }
+
+    // Check if already following
+    var count int64
+    h.userRepo.db.Model(&models.Follow{}).
+        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
+        Count(&count)
+
+    if count > 0 {
+        // Unfollow
+        h.userRepo.db.Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
+            Delete(&models.Follow{})
+
+        var newCount int64
+        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
+
+        c.JSON(http.StatusOK, gin.H{
+            "following":     false,
+            "followerCount": newCount,
+        })
+    } else {
+        // Follow
+        follow := &models.Follow{
+            FollowerID:  followerUID,
+            FollowingID: followingUID,
+        }
+        if err := h.userRepo.db.Create(follow).Error; err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to follow user"})
+            return
+        }
+
+        var newCount int64
+        h.userRepo.db.Model(&models.Follow{}).Where("following_id = ?", followingUID).Count(&newCount)
+
+        c.JSON(http.StatusOK, gin.H{
+            "following":     true,
+            "followerCount": newCount,
+        })
+    }
+}
+
+// IsFollowing - Check if current user is following another user
+func (h *UserHandler) IsFollowing(c *gin.Context) {
+    followerID := c.GetString("userID")
+    followingID := c.Param("userId")
+
+    if followerID == "" {
+        c.JSON(http.StatusOK, gin.H{"following": false})
+        return
+    }
+
+    followerUID, _ := uuid.Parse(followerID)
+    followingUID, err := uuid.Parse(followingID)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        return
+    }
+
+    var count int64
+    h.userRepo.db.Model(&models.Follow{}).
+        Where("follower_id = ? AND following_id = ?", followerUID, followingUID).
+        Count(&count)
+
+    c.JSON(http.StatusOK, gin.H{"following": count > 0})
 }

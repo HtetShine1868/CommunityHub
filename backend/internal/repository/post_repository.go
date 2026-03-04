@@ -55,7 +55,10 @@ func (r *PostRepository) FindByUser(userID uuid.UUID, page, pageSize int) ([]mod
 
     query := r.db.Model(&models.Post{}).
         Where("user_id = ?", userID).
-        Preload("Topic")
+        Preload("User").
+        Preload("Topic").
+        Preload("Tags").
+        Order("created_at desc")
 
     err := query.Count(&total).Error
     if err != nil {

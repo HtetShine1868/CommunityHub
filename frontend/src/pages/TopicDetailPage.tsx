@@ -31,8 +31,6 @@ import {
   Delete,
   MoreVert,
   Share,
-  Bookmark,
-  BookmarkBorder,
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/authStore';
 import { topicService } from '../services/topic.service';
@@ -45,6 +43,7 @@ import CreatePostModal from '../components/posts/CreatePostModal';
 import EditPostModal from '../components/posts/EditPostModal';
 import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useUIStore } from '../store/uiStore';
 
 const TopicDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +51,7 @@ const TopicDetailPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, isAuthenticated } = useAuthStore();
+  const { addNotification } = useUIStore();
 
   // State
   const [topic, setTopic] = useState<Topic | null>(null);
@@ -75,7 +75,6 @@ const TopicDetailPage: React.FC = () => {
   
   // Menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [following, setFollowing] = useState(false);
 
   // Permissions
   const isAuthor = user?.id === topic?.userId;
@@ -134,6 +133,10 @@ const TopicDetailPage: React.FC = () => {
   // Handle post like
   const handleLike = async (postId: string) => {
     if (!isAuthenticated) {
+      addNotification({
+        type: 'info',
+        message: 'Please login to like posts',
+      });
       return;
     }
     
@@ -148,6 +151,10 @@ const TopicDetailPage: React.FC = () => {
       );
     } catch (err) {
       console.error('Failed to toggle like:', err);
+      addNotification({
+        type: 'error',
+        message: 'Failed to like post',
+      });
     }
   };
 
@@ -171,8 +178,16 @@ const TopicDetailPage: React.FC = () => {
       await postService.deletePost(postId);
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
       setTotal(prev => prev - 1);
+      addNotification({
+        type: 'success',
+        message: 'Post deleted successfully',
+      });
     } catch (err) {
       console.error('Failed to delete post:', err);
+      addNotification({
+        type: 'error',
+        message: 'Failed to delete post',
+      });
     }
     handleMenuClose();
   };
@@ -191,25 +206,52 @@ const TopicDetailPage: React.FC = () => {
     
     try {
       await topicService.deleteTopic(id!);
+      addNotification({
+        type: 'success',
+        message: 'Topic deleted successfully',
+      });
       navigate('/topics');
     } catch (err) {
       console.error('Failed to delete topic:', err);
+      addNotification({
+        type: 'error',
+        message: 'Failed to delete topic',
+      });
     }
     handleMenuClose();
-  };
-
-  // Handle follow/unfollow
-  const handleFollow = () => {
-    setFollowing(!following);
-    handleMenuClose();
-    // Implement actual follow API call here
   };
 
   // Handle share
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    // Show toast notification
+    addNotification({
+      type: 'success',
+      message: 'Link copied to clipboard!',
+    });
     handleMenuClose();
+  };
+
+  // Handle topic update success
+  const handleTopicUpdated = async () => {
+    await fetchTopic();
+    setEditTopicModalOpen(false);
+    addNotification({
+      type: 'success',
+      message: 'Topic updated successfully!',
+    });
+  };
+
+  // Handle post creation success
+  const handlePostCreated = () => {
+    fetchPosts();
+    setCreatePostModalOpen(false);
+  };
+
+  // Handle post update success
+  const handlePostUpdated = () => {
+    fetchPosts();
+    setEditPostModalOpen(false);
+    setSelectedPost(null);
   };
 
   // Menu handlers
@@ -225,11 +267,6 @@ const TopicDetailPage: React.FC = () => {
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Refresh after post creation/update
-  const handlePostCreated = () => {
-    fetchPosts();
   };
 
   // Loading state
@@ -289,7 +326,7 @@ const TopicDetailPage: React.FC = () => {
           borderRadius: 2,
         }}
       >
-        {/* Topic actions menu - FIXED POSITIONING */}
+        {/* Topic actions menu */}
         <Box 
           sx={{ 
             position: 'absolute', 
@@ -322,14 +359,6 @@ const TopicDetailPage: React.FC = () => {
               horizontal: 'right',
             }}
           >
-            {isAuthenticated && (
-              <MenuItem onClick={handleFollow}>
-                {following ? <Bookmark /> : <BookmarkBorder />}
-                <Box component="span" sx={{ ml: 1 }}>
-                  {following ? 'Unfollow' : 'Follow'}
-                </Box>
-              </MenuItem>
-            )}
             <MenuItem onClick={handleShare}>
               <Share />
               <Box component="span" sx={{ ml: 1 }}>Share</Box>
@@ -358,7 +387,7 @@ const TopicDetailPage: React.FC = () => {
           alignItems: { xs: 'flex-start', sm: 'center' }, 
           gap: 2,
           mb: 2,
-          pr: { xs: 0, sm: 5 }, // Add padding right to make room for menu
+          pr: { xs: 0, sm: 5 },
         }}>
           <Typography 
             variant="h4" 
@@ -545,18 +574,15 @@ const TopicDetailPage: React.FC = () => {
           setSelectedPost(null);
         }}
         post={selectedPost}
-        onPostUpdated={handlePostCreated}
+        onPostUpdated={handlePostUpdated}
       />
 
-        <EditTopicModal
-          open={editTopicModalOpen}
-          onClose={() => setEditTopicModalOpen(false)}
-          topic={topic}
-          onTopicUpdated={async () => {
-            await fetchTopic();
-            setEditTopicModalOpen(false);
-          }}
-        />
+      <EditTopicModal
+        open={editTopicModalOpen}
+        onClose={() => setEditTopicModalOpen(false)}
+        topic={topic}
+        onTopicUpdated={handleTopicUpdated}
+      />
     </Container>
   );
 };

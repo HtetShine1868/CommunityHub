@@ -205,7 +205,7 @@ func (h *CommentHandler) GetReplies(c *gin.Context) {
     })
 }
 
-// PinComment - Pin/unpin a comment (post owner or admin only)
+// PinComment - Pin/unpin a comment (post owner only)
 func (h *CommentHandler) PinComment(c *gin.Context) {
     id, err := uuid.Parse(c.Param("id"))
     if err != nil {
@@ -213,6 +213,7 @@ func (h *CommentHandler) PinComment(c *gin.Context) {
         return
     }
 
+    // Get the comment to check permissions
     comment, err := h.commentRepo.FindByID(id)
     if err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
@@ -226,30 +227,32 @@ func (h *CommentHandler) PinComment(c *gin.Context) {
         return
     }
 
-    // Check permissions: post owner or admin
+    // Check if current user is the post creator
     userID := c.GetString("userID")
-    role := c.GetString("role")
     
-    if post.UserID.String() != userID && role != "admin" && role != "moderator" {
-        c.JSON(http.StatusForbidden, gin.H{"error": "only post owner or admin can pin comments"})
+    fmt.Printf("PinComment - UserID: %s, Post Owner: %s\n", userID, post.UserID.String())
+    
+    if post.UserID.String() != userID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "only the post creator can pin comments"})
         return
     }
 
-    // Toggle pin status
-    comment.IsPinned = !comment.IsPinned
-    comment.UpdatedAt = time.Now()
-
-    if err := h.commentRepo.Update(comment); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment"})
+    // Use the dedicated TogglePin method
+    if err := h.commentRepo.TogglePin(id); err != nil {
+        fmt.Printf("Error toggling pin: %v\n", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment pin status"})
         return
     }
 
+    // Get the updated comment to return
+    updated, _ := h.commentRepo.FindByID(id)
+    
     c.JSON(http.StatusOK, gin.H{
         "message":  "comment pin status updated",
-        "isPinned": comment.IsPinned,
+        "isPinned": updated.IsPinned,
+        "comment":  updated,
     })
 }
-
 // GetPinnedComments - Get pinned comments for a post
 func (h *CommentHandler) GetPinnedComments(c *gin.Context) {
     postID, err := uuid.Parse(c.Param("postId"))

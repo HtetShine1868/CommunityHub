@@ -51,7 +51,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const isAuthor = user?.id === post.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
-  const canPin = isAdmin; // Admins can pin any post
+  const canPin = isAdmin;
   const canEdit = isAuthor || isAdmin;
   const canDelete = isAuthor || isAdmin;
 

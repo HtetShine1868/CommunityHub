@@ -52,7 +52,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const isAuthor = currentUserId === comment.userId;
-  const isAdmin = useAuthStore.getState().user?.role === 'admin' || useAuthStore.getState().user?.role === 'moderator';
+  const isAdmin = useAuthStore.getState().user?.role === 'admin' || 
+                  useAuthStore.getState().user?.role === 'moderator';
   const canPin = isPostAuthor || isAdmin;
   const canEdit = isAuthor || isAdmin;
   const canDelete = isAuthor || isAdmin;

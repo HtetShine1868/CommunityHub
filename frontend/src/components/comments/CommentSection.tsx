@@ -7,10 +7,12 @@ import {
   Paper,
   Divider,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { commentService } from '../../services/comment.service';
 import { likeService } from '../../services/like.service';
 import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/uiStore';
 import { Comment } from '../../types/comment.types';
 import CommentCard from './CommentCard';
 
@@ -20,23 +22,32 @@ interface CommentSectionProps {
   isPostAuthor?: boolean;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ 
-  postId, 
-  onPinComment, 
-  isPostAuthor = false 
+const CommentSection: React.FC<CommentSectionProps> = ({
+  postId,
+  onPinComment,
+  isPostAuthor = false,
 }) => {
   const { isAuthenticated, user } = useAuthStore();
+  const { addNotification } = useUIStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchComments = async () => {
+    setLoading(true);
     try {
       const response = await commentService.getCommentsByPost(postId);
       setComments(response.data);
     } catch (error) {
       setError('Failed to load comments');
+      addNotification({
+        type: 'error',
+        message: 'Failed to load comments',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,25 +58,42 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
 
-    setLoading(true);
+    setSubmitting(true);
     try {
       await commentService.createComment(postId, { content: newComment });
       setNewComment('');
       fetchComments();
+      addNotification({
+        type: 'success',
+        message: 'Comment posted!',
+      });
     } catch (error) {
       setError('Failed to post comment');
+      addNotification({
+        type: 'error',
+        message: 'Failed to post comment',
+      });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleLike = async (commentId: string) => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      addNotification({
+        type: 'info',
+        message: 'Please login to like comments',
+      });
+      return;
+    }
     try {
       await likeService.toggleCommentLike(commentId);
-      fetchComments(); // Refresh to show updated likes
+      fetchComments();
     } catch (error) {
-      console.error('Failed to like comment:', error);
+      addNotification({
+        type: 'error',
+        message: 'Failed to like comment',
+      });
     }
   };
 
@@ -73,8 +101,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await commentService.createComment(postId, { content, parentId: commentId });
       fetchComments();
+      addNotification({
+        type: 'success',
+        message: 'Reply posted!',
+      });
     } catch (error) {
       setError('Failed to post reply');
+      addNotification({
+        type: 'error',
+        message: 'Failed to post reply',
+      });
     }
   };
 
@@ -83,8 +119,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await commentService.deleteComment(commentId);
       fetchComments();
+      addNotification({
+        type: 'success',
+        message: 'Comment deleted',
+      });
     } catch (error) {
       setError('Failed to delete comment');
+      addNotification({
+        type: 'error',
+        message: 'Failed to delete comment',
+      });
     }
   };
 
@@ -92,8 +136,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await commentService.updateComment(commentId, { content });
       fetchComments();
+      addNotification({
+        type: 'success',
+        message: 'Comment updated!',
+      });
     } catch (error) {
       setError('Failed to update comment');
+      addNotification({
+        type: 'error',
+        message: 'Failed to update comment',
+      });
     }
   };
 
@@ -103,6 +155,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       fetchComments();
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -127,9 +187,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={loading || !newComment.trim()}
+            disabled={submitting || !newComment.trim()}
           >
-            Post Comment
+            {submitting ? 'Posting...' : 'Post Comment'}
           </Button>
         </Paper>
       ) : (
@@ -140,19 +200,25 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
       <Divider sx={{ mb: 2 }} />
 
-      {comments.map((comment) => (
-        <CommentCard
-          key={comment.id}
-          comment={comment}
-          onLike={() => handleLike(comment.id)}
-          onReply={(content) => handleReply(comment.id, content)}
-          onDelete={() => handleDelete(comment.id)}
-          onEdit={(content) => handleEdit(comment.id, content)}
-          onPin={() => handlePin(comment.id)}
-          currentUserId={user?.id}
-          isPostAuthor={isPostAuthor}
-        />
-      ))}
+      {comments.length === 0 ? (
+        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+          No comments yet. Be the first to comment!
+        </Typography>
+      ) : (
+        comments.map((comment) => (
+          <CommentCard
+            key={comment.id}
+            comment={comment}
+            onLike={() => handleLike(comment.id)}
+            onReply={(content) => handleReply(comment.id, content)}
+            onDelete={() => handleDelete(comment.id)}
+            onEdit={(content) => handleEdit(comment.id, content)}
+            onPin={() => handlePin(comment.id)}
+            currentUserId={user?.id}
+            isPostAuthor={isPostAuthor}
+          />
+        ))
+      )}
     </Box>
   );
 };

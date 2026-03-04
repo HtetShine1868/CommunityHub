@@ -155,7 +155,7 @@ func main() {
     }
 
     router.GET("/api/topics/:id/pinned-posts", userHandler.GetPinnedPostsByTopic)
-    router.GET("/api/posts/:postId/pinned-comments", userHandler.GetPinnedCommentsByPost)
+    router.GET("/api/posts/:id/pinned-comments", userHandler.GetPinnedCommentsByPost)
 
 
     port := os.Getenv("PORT")

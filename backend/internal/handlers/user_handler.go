@@ -9,7 +9,6 @@ import (
 
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
-    "golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -209,7 +208,6 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     })
 }
 
-// GetUserComments - Get comments by user (with pinned comments first)
 func (h *UserHandler) GetUserComments(c *gin.Context) {
     userID := c.Param("userId")
     uid, err := uuid.Parse(userID)
@@ -282,7 +280,6 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
     })
 }
 
-// GetPinnedPostsByTopic - Get posts pinned by topic creator in a specific topic
 func (h *UserHandler) GetPinnedPostsByTopic(c *gin.Context) {
     topicID := c.Param("topicId")
     tid, err := uuid.Parse(topicID)
@@ -291,14 +288,6 @@ func (h *UserHandler) GetPinnedPostsByTopic(c *gin.Context) {
         return
     }
 
-    // Get the topic to check creator
-    topic, err := h.topicRepo.FindByID(tid)
-    if err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
-        return
-    }
-
-    // Get pinned posts in this topic
     var posts []models.Post
     err = h.userRepo.GetDB().
         Where("topic_id = ? AND is_pinned = ?", tid, true).

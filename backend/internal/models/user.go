@@ -33,6 +33,7 @@ func (User) TableName() string {
     return "users"
 }
 
-func (r *UserRepository) GetDB() *gorm.DB {
-    return r.db
+func (u *User) BeforeUpdate(tx *gorm.DB) error {
+    u.UpdatedAt = time.Now()
+    return nil
 }

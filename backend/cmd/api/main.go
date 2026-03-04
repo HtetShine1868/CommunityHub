@@ -47,7 +47,7 @@ func main() {
     postHandler := handlers.NewPostHandler(postRepo, topicRepo, tagRepo, db)
     commentHandler := handlers.NewCommentHandler(commentRepo, postRepo)
     likeHandler := handlers.NewLikeHandler(likeRepo, postRepo, commentRepo)
-    userHandler := handlers.NewUserHandler(userRepo, postRepo, commentRepo)
+    userHandler := handlers.NewUserHandler(userRepo, postRepo, commentRepo, topicRepo)
 
     router := gin.Default()
     frontendURL := os.Getenv("FRONTEND_URL")
@@ -89,6 +89,7 @@ func main() {
         c.Next()
     })
 
+    //Api routes
 
     auth := router.Group("/api/auth")
     {
@@ -97,8 +98,6 @@ func main() {
         auth.POST("/logout", authHandler.Logout)
         auth.GET("/me", middleware.OptionalAuthMiddleware(), authHandler.GetCurrentUser)
     }
-
-
     router.GET("/api/health", func(c *gin.Context) {
         c.JSON(200, gin.H{
             "status":  "ok",
@@ -106,7 +105,6 @@ func main() {
             "time":    time.Now().Unix(),
         })
     })
-
 
     router.GET("/api/topics", middleware.OptionalAuthMiddleware(), topicHandler.GetAllTopics)
     router.GET("/api/topics/:id", middleware.OptionalAuthMiddleware(), topicHandler.GetTopic)
@@ -140,17 +138,10 @@ func main() {
         // Likes
         api.POST("/posts/:id/like", likeHandler.TogglePostLike)
         api.POST("/comments/:id/like", likeHandler.ToggleCommentLike)
-    }
 
-
-    profile := router.Group("/api/user")
-    profile.Use(middleware.AuthMiddleware())
-    {
-        profile.GET("/profile", userHandler.GetMyProfile)
-        profile.PUT("/profile", userHandler.UpdateProfile)
-        profile.POST("/avatar", userHandler.UploadAvatar)
-        profile.POST("/change-password", userHandler.ChangePassword)
-        profile.GET("/liked-posts", userHandler.GetLikedPosts)
+        //Profile
+        api.GET("/user/profile", userHandler.GetMyProfile)
+        api.PUT("/user/profile", userHandler.UpdateProfile)
     }
 
 
@@ -162,6 +153,9 @@ func main() {
         users.GET("/:userId/comments", userHandler.GetUserComments)
 
     }
+
+    router.GET("/api/topics/:topicId/pinned-posts", userHandler.GetPinnedPostsByTopic)
+    router.GET("/api/posts/:postId/pinned-comments", userHandler.GetPinnedCommentsByPost)
 
 
     port := os.Getenv("PORT")

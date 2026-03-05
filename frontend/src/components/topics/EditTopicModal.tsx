@@ -20,7 +20,7 @@ interface EditTopicModalProps {
   open: boolean;
   onClose: () => void;
   topic: Topic | null;
-  onTopicUpdated: () => void;
+  onTopicUpdated: (updatedTopic: Topic) => void; // Change to receive updated topic
 }
 
 const EditTopicModal: React.FC<EditTopicModalProps> = ({
@@ -83,7 +83,8 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
         message: 'Topic updated successfully!',
       });
       
-      onTopicUpdated(); // This will refresh the topic and close the modal
+      // Pass the updated topic back to parent
+      onTopicUpdated(response);
     } catch (err: any) {
       console.error('❌ Update error:', err);
       setError(err.response?.data?.error || 'Failed to update topic');

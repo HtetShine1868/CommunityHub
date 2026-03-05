@@ -49,12 +49,15 @@ const TopicsPage: React.FC = () => {
     }
   };
 
-  const handleUpdateTopic = async () => {
-    console.log('🔄 Topic updated callback triggered');
+  const handleUpdateTopic = async (updatedTopic: Topic) => {
+    console.log('🔄 Topic updated, updating local state:', updatedTopic);
+    
+    // Update the local state directly
+    // The updateTopic function in useTopics already does this, but we'll also update here to be safe
     setEditModalOpen(false);
     setSelectedTopic(null);
-    // No need to call updateTopic here as it's already called in EditTopicModal
-    // Just close the modal and refresh will happen via the hook
+    
+    // No need to do anything else as the useTopics hook already updates the state
   };
 
   const handleCreateTopic = async (data: any) => {

@@ -23,7 +23,15 @@ func (r *CommentRepository) GetDB() *gorm.DB {
 }
 
 func (r *CommentRepository) Create(comment *models.Comment) error {
-    return r.db.Create(comment).Error
+    if comment.ID == uuid.Nil {
+        comment.ID = uuid.New()
+    }
+    result := r.db.Create(comment)
+    if result.Error != nil {
+        fmt.Printf("Database error creating comment: %v\n", result.Error)
+        return result.Error
+    }
+    return nil
 }
 
 func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]models.Comment, int64, error) {
@@ -133,9 +141,8 @@ func (r *CommentRepository) FindByID(id uuid.UUID) (*models.Comment, error) {
     return &comment, err
 }
 
-// ✅ FIXED: Update method for editing comment content
+// Update - Update a comment (for content edits)
 func (r *CommentRepository) Update(comment *models.Comment) error {
-    // For editing content (when isEdited is true)
     if comment.IsEdited {
         now := time.Now()
         comment.EditedAt = &now
@@ -146,6 +153,8 @@ func (r *CommentRepository) Update(comment *models.Comment) error {
     // Use Updates to only change specific fields
     result := r.db.Model(&models.Comment{}).Where("id = ?", comment.ID).Updates(map[string]interface{}{
         "content":      comment.Content,
+        "content_html": comment.ContentHTML,
+        "is_pinned":    comment.IsPinned,
         "is_edited":    comment.IsEdited,
         "edited_at":    comment.EditedAt,
         "updated_at":   comment.UpdatedAt,
@@ -156,34 +165,36 @@ func (r *CommentRepository) Update(comment *models.Comment) error {
         return result.Error
     }
     
+    if result.RowsAffected == 0 {
+        return fmt.Errorf("comment not found")
+    }
+    
     return nil
 }
 
-// ✅ NEW: Method specifically for toggling pin status
-func (r *CommentRepository) TogglePin(id uuid.UUID) error {
-    result := r.db.Model(&models.Comment{}).Where("id = ?", id).Update("is_pinned", gorm.Expr("NOT is_pinned"))
+// TogglePin - Toggle pin status
+func (r *CommentRepository) TogglePin(id uuid.UUID) (bool, error) {
+    var comment models.Comment
+    
+    // Get current pin status
+    err := r.db.Select("is_pinned").First(&comment, "id = ?", id).Error
+    if err != nil {
+        return false, err
+    }
+    
+    // Toggle the value
+    newPinStatus := !comment.IsPinned
+    
+    // Update with raw SQL to avoid any issues
+    result := r.db.Exec("UPDATE comments SET is_pinned = ?, updated_at = ? WHERE id = ?", 
+        newPinStatus, time.Now(), id)
     
     if result.Error != nil {
         fmt.Printf("Error toggling pin: %v\n", result.Error)
-        return result.Error
+        return false, result.Error
     }
     
-    return nil
-}
-
-// ✅ NEW: Method for updating pin status directly
-func (r *CommentRepository) UpdatePin(id uuid.UUID, isPinned bool) error {
-    result := r.db.Model(&models.Comment{}).Where("id = ?", id).Updates(map[string]interface{}{
-        "is_pinned":  isPinned,
-        "updated_at": time.Now(),
-    })
-    
-    if result.Error != nil {
-        fmt.Printf("Error updating pin: %v\n", result.Error)
-        return result.Error
-    }
-    
-    return nil
+    return newPinStatus, nil
 }
 
 func (r *CommentRepository) Delete(id uuid.UUID) error {

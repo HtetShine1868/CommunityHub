@@ -7,6 +7,7 @@ import (
     "strconv"
     "time"
     "fmt"
+
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
 )
@@ -36,6 +37,7 @@ func (h *CommentHandler) GetCommentsByPost(c *gin.Context) {
 
     comments, total, err := h.commentRepo.FindByPost(postID, page, pageSize)
     if err != nil {
+        fmt.Printf("Error fetching comments: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch comments"})
         return
     }
@@ -58,7 +60,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
     }
 
     // Verify post exists
-    _, err = h.postRepo.FindByID(postID)
+    post, err := h.postRepo.FindByID(postID)
     if err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
         return
@@ -74,26 +76,44 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         return
     }
 
-    userID, _ := uuid.Parse(c.GetString("userID"))
+    userIDStr := c.GetString("userID")
+    if userIDStr == "" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+        return
+    }
+
+    userID, err := uuid.Parse(userIDStr)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        return
+    }
 
     comment := &models.Comment{
-        Content:  req.Content,
-        UserID:   userID,
-        PostID:   postID,
-        ParentID: req.ParentID,
-        IsPinned: false,
-        IsEdited: false,
+        ID:        uuid.New(),
+        Content:   req.Content,
+        UserID:    userID,
+        PostID:    postID,
+        ParentID:  req.ParentID,
+        IsPinned:  false,
+        IsEdited:  false,
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
     }
 
     if err := h.commentRepo.Create(comment); err != nil {
+        fmt.Printf("Error creating comment: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
         return
     }
 
     // Fetch the created comment with user data
-    comment, _ = h.commentRepo.FindByID(comment.ID)
+    created, err := h.commentRepo.FindByID(comment.ID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "comment created but failed to fetch"})
+        return
+    }
 
-    c.JSON(http.StatusCreated, comment)
+    c.JSON(http.StatusCreated, created)
 }
 
 // UpdateComment - Update a comment
@@ -121,13 +141,11 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 
     // Check ownership
     userID := c.GetString("userID")
-    if comment.UserID.String() != userID {
-        // Check if user is admin
-        role := c.GetString("role")
-        if role != "admin" && role != "moderator" {
-            c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this comment"})
-            return
-        }
+    role := c.GetString("role")
+    
+    if comment.UserID.String() != userID && role != "admin" && role != "moderator" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this comment"})
+        return
     }
 
     comment.Content = req.Content
@@ -162,13 +180,11 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 
     // Check ownership
     userID := c.GetString("userID")
-    if comment.UserID.String() != userID {
-        // Check if user is admin
-        role := c.GetString("role")
-        if role != "admin" && role != "moderator" {
-            c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to delete this comment"})
-            return
-        }
+    role := c.GetString("role")
+    
+    if comment.UserID.String() != userID && role != "admin" && role != "moderator" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to delete this comment"})
+        return
     }
 
     if err := h.commentRepo.Delete(id); err != nil {
@@ -229,30 +245,31 @@ func (h *CommentHandler) PinComment(c *gin.Context) {
 
     // Check if current user is the post creator
     userID := c.GetString("userID")
+    role := c.GetString("role")
     
-    fmt.Printf("PinComment - UserID: %s, Post Owner: %s\n", userID, post.UserID.String())
+    fmt.Printf("PinComment - UserID: %s, Role: %s, Post Owner: %s\n", userID, role, post.UserID.String())
     
-    if post.UserID.String() != userID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "only the post creator can pin comments"})
+    if post.UserID.String() != userID && role != "admin" && role != "moderator" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "only the post creator or admin can pin comments"})
         return
     }
 
-    // Use the dedicated TogglePin method
-    if err := h.commentRepo.TogglePin(id); err != nil {
-        fmt.Printf("Error toggling pin: %v\n", err)
+    // Toggle pin status
+    comment.IsPinned = !comment.IsPinned
+    comment.UpdatedAt = time.Now()
+
+    if err := h.commentRepo.Update(comment); err != nil {
+        fmt.Printf("Error updating pin: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment pin status"})
         return
     }
 
-    // Get the updated comment to return
-    updated, _ := h.commentRepo.FindByID(id)
-    
     c.JSON(http.StatusOK, gin.H{
         "message":  "comment pin status updated",
-        "isPinned": updated.IsPinned,
-        "comment":  updated,
+        "isPinned": comment.IsPinned,
     })
 }
+
 // GetPinnedComments - Get pinned comments for a post
 func (h *CommentHandler) GetPinnedComments(c *gin.Context) {
     postID, err := uuid.Parse(c.Param("postId"))

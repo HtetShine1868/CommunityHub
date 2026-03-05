@@ -31,21 +31,30 @@ const TopicsPage: React.FC = () => {
     (topic.description && topic.description.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const handleEdit = (topic: Topic) => {
-    setSelectedTopic(topic);
-    setEditModalOpen(true);
-  };
-
-  const handleDelete = async (topic: Topic) => {
-    if (window.confirm(`Are you sure you want to delete "${topic.title}"?`)) {
-      await deleteTopic(topic.id);
+  const handleEdit = (topicId: string) => {
+    console.log('📝 Editing topic with ID:', topicId);
+    const topic = topics.find(t => t.id === topicId);
+    if (topic) {
+      console.log('✅ Found topic:', topic);
+      setSelectedTopic(topic);
+      setEditModalOpen(true);
+    } else {
+      console.error('❌ Topic not found with ID:', topicId);
     }
   };
 
-  const handleUpdateTopic = async (id: string, data: any) => {
-    await updateTopic(id, data);
+  const handleDelete = async (topicId: string) => {
+    if (window.confirm('Are you sure you want to delete this topic?')) {
+      await deleteTopic(topicId);
+    }
+  };
+
+  const handleUpdateTopic = async () => {
+    console.log('🔄 Topic updated callback triggered');
     setEditModalOpen(false);
     setSelectedTopic(null);
+    // No need to call updateTopic here as it's already called in EditTopicModal
+    // Just close the modal and refresh will happen via the hook
   };
 
   const handleCreateTopic = async (data: any) => {

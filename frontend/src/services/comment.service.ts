@@ -15,7 +15,9 @@ export const commentService = {
   },
 
   async createComment(postId: string, data: CreateCommentData): Promise<Comment> {
+    console.log('📝 Creating comment:', { postId, data });
     const response = await api.post(`/posts/${postId}/comments`, data);
+    console.log('✅ Comment created:', response.data);
     return response.data;
   },
 

@@ -30,25 +30,33 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
     var comments []models.Comment
     var total int64
 
-    // Get top-level comments only (no parent)
-    query := r.db.Model(&models.Comment{}).
-        Where("post_id = ? AND parent_id IS NULL", postID).
-        Preload("User")
-
-    err := query.Count(&total).Error
+    // First check if post exists or handle empty case gracefully
+    db := r.db.Model(&models.Comment{}).Where("post_id = ? AND parent_id IS NULL", postID)
+    
+    err := db.Count(&total).Error
     if err != nil {
+        fmt.Printf("Error counting comments: %v\n", err)
         return nil, 0, err
     }
 
-    err = query.Offset((page - 1) * pageSize).
+    // If no comments, return empty array (not error)
+    if total == 0 {
+        return []models.Comment{}, 0, nil
+    }
+
+    // Get paginated comments
+    err = db.Preload("User").
+        Offset((page - 1) * pageSize).
         Limit(pageSize).
         Order("is_pinned desc, created_at asc").
         Find(&comments).Error
+        
     if err != nil {
+        fmt.Printf("Error fetching comments: %v\n", err)
         return nil, 0, err
     }
 
-    // Load replies and counts for each comment
+    // Load replies for each comment
     for i := range comments {
         var replies []models.Comment
         r.db.Where("parent_id = ?", comments[i].ID).
@@ -61,16 +69,9 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
         var likeCount int64
         r.db.Model(&models.Like{}).Where("comment_id = ?", comments[i].ID).Count(&likeCount)
         comments[i].LikeCount = likeCount
-        
-        // Get like count for each reply
-        for j := range replies {
-            var replyLikeCount int64
-            r.db.Model(&models.Like{}).Where("comment_id = ?", replies[j].ID).Count(&replyLikeCount)
-            replies[j].LikeCount = replyLikeCount
-        }
     }
 
-    return comments, total, err
+    return comments, total, nil
 }
 
 func (r *CommentRepository) FindReplies(commentID uuid.UUID, page, pageSize int) ([]models.Comment, int64, error) {

@@ -13,12 +13,14 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Topic } from '../../types/topic.types';
+import { topicService } from '../../services/topic.service';
+import { useUIStore } from '../../store/uiStore';
 
 interface EditTopicModalProps {
   open: boolean;
   onClose: () => void;
   topic: Topic | null;
-  onTopicUpdated: (id: string, data: any) => Promise<void>;
+  onTopicUpdated: () => void;
 }
 
 const EditTopicModal: React.FC<EditTopicModalProps> = ({
@@ -27,6 +29,7 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
   topic,
   onTopicUpdated,
 }) => {
+  const { addNotification } = useUIStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -37,50 +40,76 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
   });
 
   useEffect(() => {
-    if (topic) {
+    if (topic && open) {
+      console.log('Setting form data from topic:', topic);
       setFormData({
         title: topic.title || '',
         description: topic.description || '',
         color: topic.color || '#6366f1',
         isPrivate: topic.isPrivate || false,
       });
+      setError(null);
     }
-  }, [topic]);
+  }, [topic, open]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       setError('Title is required');
       return;
     }
-    if (!topic) return;
+    if (!topic) {
+      setError('No topic selected');
+      return;
+    }
 
     setLoading(true);
     setError(null);
+    
     try {
-      await onTopicUpdated(topic.id, formData);
-      onClose();
+      console.log('📤 Updating topic:', topic.id, formData);
+      
+      const response = await topicService.updateTopic(topic.id, {
+        title: formData.title,
+        description: formData.description,
+        color: formData.color,
+        isPrivate: formData.isPrivate,
+      });
+      
+      console.log('📥 Update response:', response);
+      
+      // Show success message
+      addNotification({
+        type: 'success',
+        message: 'Topic updated successfully!',
+      });
+      
+      onTopicUpdated(); // This will refresh the topic and close the modal
     } catch (err: any) {
+      console.error('❌ Update error:', err);
       setError(err.response?.data?.error || 'Failed to update topic');
+      addNotification({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to update topic',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    onClose();
+    if (!loading) {
+      onClose();
+    }
   };
 
+  if (!topic) return null;
+
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose}
-      maxWidth="sm" 
-      fullWidth
-      disableEnforceFocus
-    >
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Edit Topic</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        
         <TextField
           fullWidth
           label="Title"
@@ -89,8 +118,10 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
           margin="normal"
           required
           disabled={loading}
-          autoFocus
+          error={!formData.title.trim()}
+          helperText={!formData.title.trim() ? 'Title is required' : ''}
         />
+        
         <TextField
           fullWidth
           label="Description"
@@ -101,6 +132,7 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
           rows={3}
           disabled={loading}
         />
+        
         <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
           <TextField
             label="Color"
@@ -110,6 +142,7 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
             disabled={loading}
             sx={{ width: 100 }}
           />
+          
           <FormControlLabel
             control={
               <Switch
@@ -122,8 +155,11 @@ const EditTopicModal: React.FC<EditTopicModalProps> = ({
           />
         </Box>
       </DialogContent>
+      
       <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>Cancel</Button>
+        <Button onClick={handleClose} disabled={loading}>
+          Cancel
+        </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"

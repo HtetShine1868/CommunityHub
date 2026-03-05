@@ -241,6 +241,7 @@ const TopicDetailPage: React.FC = () => {
     try {
       await fetchTopic();
       console.log('✅ Topic refreshed successfully');
+      setEditTopicModalOpen(false);
       addNotification({
         type: 'success',
         message: 'Topic updated successfully!',

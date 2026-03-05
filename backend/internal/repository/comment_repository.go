@@ -145,7 +145,6 @@ func (r *CommentRepository) Update(comment *models.Comment) error {
     // Use Updates to only change specific fields
     result := r.db.Model(&models.Comment{}).Where("id = ?", comment.ID).Updates(map[string]interface{}{
         "content":      comment.Content,
-        "content_html": comment.ContentHTML,
         "is_edited":    comment.IsEdited,
         "edited_at":    comment.EditedAt,
         "updated_at":   comment.UpdatedAt,

@@ -41,6 +41,7 @@ func main() {
     commentRepo := repository.NewCommentRepository(db)
     likeRepo := repository.NewLikeRepository(db)
     tagRepo := repository.NewTagRepository(db)
+    categoryRepo := repository.NewCategoryRepository(db)
 
     authHandler := handlers.NewAuthHandler(userRepo)
     topicHandler := handlers.NewTopicHandler(topicRepo)
@@ -48,6 +49,7 @@ func main() {
     commentHandler := handlers.NewCommentHandler(commentRepo, postRepo)
     likeHandler := handlers.NewLikeHandler(likeRepo, postRepo, commentRepo)
     userHandler := handlers.NewUserHandler(userRepo, postRepo, commentRepo, topicRepo)
+    categoryHandler := handlers.NewCategoryHandler(categoryRepo)
 
     router := gin.Default()
     frontendURL := os.Getenv("FRONTEND_URL")
@@ -105,6 +107,8 @@ func main() {
             "time":    time.Now().Unix(),
         })
     })
+    router.GET("/api/categories", categoryHandler.GetAllCategories)
+    router.GET("/api/categories/:id", categoryHandler.GetCategory)
 
     router.GET("/api/topics", middleware.OptionalAuthMiddleware(), topicHandler.GetAllTopics)
     router.GET("/api/topics/:id", middleware.OptionalAuthMiddleware(), topicHandler.GetTopic)

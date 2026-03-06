@@ -35,7 +35,7 @@ func (r *TopicRepository) Create(topic *models.Topic) error {
 
 func (r *TopicRepository) FindAll() ([]models.Topic, error) {
     var topics []models.Topic
-    err := r.db.Preload("User").Find(&topics).Error
+    err := r.db.Preload("User").Preload("Category").Find(&topics).Error
     if err != nil {
         fmt.Printf("Database error in FindAll: %v\n", err)
         return nil, err
@@ -45,7 +45,7 @@ func (r *TopicRepository) FindAll() ([]models.Topic, error) {
 
 func (r *TopicRepository) FindByID(id uuid.UUID) (*models.Topic, error) {
     var topic models.Topic
-    err := r.db.Preload("User").First(&topic, "id = ?", id).Error
+    err := r.db.Preload("User").Preload("Category").First(&topic, "id = ?", id).Error
     if errors.Is(err, gorm.ErrRecordNotFound) {
         return nil, errors.New("topic not found")
     }

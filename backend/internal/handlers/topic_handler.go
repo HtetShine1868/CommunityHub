@@ -73,6 +73,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
         Icon        string `json:"icon"`
         Color       string `json:"color"`
         IsPrivate   bool   `json:"isPrivate"`
+        CategoryID  *uuid.UUID `json:"categoryId"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,6 +89,7 @@ func (h *TopicHandler) CreateTopic(c *gin.Context) {
         Color:       req.Color,
         IsPrivate:   req.IsPrivate,
         UserID:      userID,
+        CategoryID:  req.CategoryID,
     }
 
     // Save to database
@@ -117,6 +119,7 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
         Icon        string `json:"icon"`
         Color       string `json:"color"`
         IsPrivate   bool   `json:"isPrivate"`
+        CategoryID  *uuid.UUID `json:"categoryId"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
@@ -156,6 +159,9 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
         return
     }
 
+    if req.CategoryID != nil {
+        topic.CategoryID = req.CategoryID
+    }
     c.JSON(http.StatusOK, topic)
 }
 

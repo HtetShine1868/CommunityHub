@@ -22,6 +22,7 @@ type Topic struct {
     DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
     
     User        User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
+    Category    *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 }
 
 func (Topic) TableName() string {

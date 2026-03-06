@@ -15,7 +15,7 @@ type Topic struct {
     Banner      string         `gorm:"column:banner" json:"banner"`
     Color       string         `gorm:"column:color" json:"color"`
     IsPrivate   bool           `gorm:"column:is_private;default:false" json:"isPrivate"`
-    CategoryID  uuid.UUID      `gorm:"column:category_id;not null;index" json:"categoryId"`
+    CategoryID  *uuid.UUID     `gorm:"column:category_id;index" json:"categoryId"`
     UserID      uuid.UUID      `gorm:"column:user_id;not null;index" json:"userId"`
     CreatedAt   time.Time      `gorm:"column:created_at" json:"createdAt"`
     UpdatedAt   time.Time      `gorm:"column:updated_at" json:"updatedAt"`

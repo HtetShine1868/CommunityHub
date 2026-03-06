@@ -154,14 +154,16 @@ func (h *TopicHandler) UpdateTopic(c *gin.Context) {
     }
     topic.IsPrivate = req.IsPrivate
 
+    if req.CategoryID != nil {
+        topic.CategoryID = req.CategoryID
+    }
+
     if err := h.topicRepo.Update(topic); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update topic"})
         return
     }
 
-    if req.CategoryID != nil {
-        topic.CategoryID = req.CategoryID
-    }
+
     c.JSON(http.StatusOK, topic)
 }
 

@@ -1,6 +1,6 @@
 import { User } from './user.types';
 import { Topic } from './topic.types';
-
+import { Category } from './category.types';
 export interface Tag {
   id: string;
   name: string;
@@ -20,10 +20,9 @@ export interface Post {
   userId: string;
   topicId: string;
   user?: User;
-  topic?: Topic;
+  topic?: Topic & { category?: Category };
   tags?: Tag[];
   likeCount: number;
-  
   commentCount: number;
   liked?: boolean;
   createdAt: string;

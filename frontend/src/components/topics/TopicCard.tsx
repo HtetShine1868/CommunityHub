@@ -10,6 +10,7 @@ import {
   Menu,
   MenuItem,
   useTheme,
+  Tooltip,
 } from '@mui/material';
 import {
   Forum,
@@ -19,6 +20,7 @@ import {
   MoreVert,
   Edit,
   Delete,
+  Category as CategoryIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Topic } from '../../types/topic.types';
@@ -141,6 +143,23 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
             }}
           />
         </Box>
+
+        {/* Category Chip */}
+        {topic.category && (
+          <Box sx={{ mb: 1 }}>
+            <Chip
+              icon={<span>{topic.category.icon || '📁'}</span>}
+              label={topic.category.name}
+              size="small"
+              variant="outlined"
+              sx={{
+                backgroundColor: topic.category.color ? `${topic.category.color}20` : 'transparent',
+                borderColor: topic.category.color || theme.palette.primary.main,
+                color: topic.category.color || theme.palette.primary.main,
+              }}
+            />
+          </Box>
+        )}
 
         <Typography
           variant="body2"

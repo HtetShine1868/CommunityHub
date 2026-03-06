@@ -1,4 +1,5 @@
 import { User } from './user.types';
+import { Category } from './category.types';
 
 export interface Topic {
   id: string;
@@ -8,9 +9,10 @@ export interface Topic {
   banner?: string;
   color?: string;
   isPrivate: boolean;
-  isLocked?: boolean; // Add this
+  categoryId?: string;
   userId: string;
   user?: User;
+  category?: Category; // Add this
   postCount?: number;
   followerCount?: number;
   createdAt: string;
@@ -23,6 +25,7 @@ export interface CreateTopicData {
   icon?: string;
   color?: string;
   isPrivate?: boolean;
+  categoryId?: string; // Add this
 }
 
 export interface UpdateTopicData {
@@ -31,4 +34,5 @@ export interface UpdateTopicData {
   icon?: string;
   color?: string;
   isPrivate?: boolean;
+  categoryId?: string; // Add this
 }

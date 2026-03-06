@@ -395,7 +395,7 @@ const TopicDetailPage: React.FC = () => {
           </Menu>
         </Box>
 
-        {/* Topic title and privacy chip */}
+        {/* Topic title and chips */}
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', sm: 'row' },
@@ -417,13 +417,32 @@ const TopicDetailPage: React.FC = () => {
             {topic.title}
           </Typography>
           
-          <Chip
-            icon={topic.isPrivate ? <Lock /> : <Public />}
-            label={topic.isPrivate ? 'Private Topic' : 'Public Topic'}
-            color={topic.isPrivate ? 'default' : 'primary'}
-            variant="outlined"
-            size={isMobile ? 'small' : 'medium'}
-          />
+          {/* Chips container */}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Category Chip */}
+            {topic.category && (
+              <Chip
+                icon={<span>{topic.category.icon || '📁'}</span>}
+                label={topic.category.name}
+                size={isMobile ? 'small' : 'medium'}
+                sx={{
+                  backgroundColor: topic.category.color ? `${topic.category.color}20` : 'transparent',
+                  borderColor: topic.category.color || theme.palette.primary.main,
+                  color: topic.category.color || theme.palette.primary.main,
+                  fontWeight: 500,
+                }}
+              />
+            )}
+            
+            {/* Privacy Chip */}
+            <Chip
+              icon={topic.isPrivate ? <Lock /> : <Public />}
+              label={topic.isPrivate ? 'Private Topic' : 'Public Topic'}
+              color={topic.isPrivate ? 'default' : 'primary'}
+              variant="outlined"
+              size={isMobile ? 'small' : 'medium'}
+            />
+          </Box>
         </Box>
 
         {/* Topic description */}

@@ -95,6 +95,7 @@ export const useAuth = () => {
     login,
     register,
     logout,
+    loading,
     error,
   };
 };

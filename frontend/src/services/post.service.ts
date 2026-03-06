@@ -51,4 +51,13 @@ export const postService = {
     const response = await api.get('/recent-posts', { params: { limit } });
     return response.data;
   },
+  async getPostCountByTopic(topicId: string): Promise<number> {
+  try {
+    const response = await this.getPostsByTopic(topicId, 1, 1);
+    return response.total;
+  } catch (error) {
+    console.error('Failed to get post count:', error);
+    return 0;
+  }
+}
 };

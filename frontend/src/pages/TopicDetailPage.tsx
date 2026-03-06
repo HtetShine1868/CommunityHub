@@ -516,10 +516,7 @@ const TopicDetailPage: React.FC = () => {
               horizontal: 'right',
             }}
           >
-            <MenuItem onClick={handleShare}>
-              <Share />
-              <Box component="span" sx={{ ml: 1 }}>Share</Box>
-            </MenuItem>
+           
             {canEdit && (
               [
                 <Divider key="divider" />,
@@ -614,12 +611,6 @@ const TopicDetailPage: React.FC = () => {
               <Forum fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 {total} {total === 1 ? 'post' : 'posts'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <People fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
-                {topic.followerCount || 0} followers
               </Typography>
             </Box>
           </Box>

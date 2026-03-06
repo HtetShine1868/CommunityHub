@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import {
   MenuItem,
   useTheme,
   Tooltip,
+  Skeleton,
 } from '@mui/material';
 import {
   Forum,
@@ -25,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Topic } from '../../types/topic.types';
 import { useAuthStore } from '../../store/authStore';
+import { postService } from '../../services/post.service';
 
 interface TopicCardProps {
   topic: Topic;
@@ -37,6 +39,27 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [postCount, setPostCount] = useState<number>(topic.postCount || 0);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch actual post count if not provided
+  useEffect(() => {
+    if (topic.postCount === undefined && topic.id) {
+      const fetchPostCount = async () => {
+        setLoading(true);
+        try {
+          // You'll need to add this method to your postService
+          const count = await postService.getPostCountByTopic(topic.id);
+          setPostCount(count);
+        } catch (error) {
+          console.error('Failed to fetch post count:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchPostCount();
+    }
+  }, [topic.id, topic.postCount]);
 
   const isAuthor = user?.id === topic.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
@@ -180,16 +203,10 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Forum fontSize="small" color="action" />
             <Typography variant="caption" color="text.secondary">
-              {topic.postCount || 0} posts
+              {loading ? <Skeleton width={30} /> : `${postCount} ${postCount === 1 ? 'post' : 'posts'}`}
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <People fontSize="small" color="action" />
-            <Typography variant="caption" color="text.secondary">
-              {topic.followerCount || 0} followers
-            </Typography>
-          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>

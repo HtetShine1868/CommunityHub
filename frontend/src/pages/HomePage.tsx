@@ -7,28 +7,19 @@ import {
   Button,
   Card,
   CardContent,
-  CardMedia,
-  Avatar,
-  Chip,
   Paper,
   Skeleton,
   useTheme,
   useMediaQuery,
-  IconButton,
-  Divider,
-  Stack,
   alpha,
+  Stack,
 } from '@mui/material';
 import {
   TrendingUp,
   Whatshot,
   Schedule,
   ArrowForward,
-  Search,
   Add,
-  Group,
-  Forum,
-  Star,
   LocalFireDepartment,
   RocketLaunch,
   KeyboardArrowRight,
@@ -41,38 +32,22 @@ import { postService } from '../services/post.service';
 import { topicService } from '../services/topic.service';
 import PostCard from '../components/posts/PostCard';
 import TopicCard from '../components/topics/TopicCard';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-
-interface Stats {
-  totalUsers: number;
-  totalTopics: number;
-  totalPosts: number;
-  totalComments: number;
-}
 
 const HomePage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, user } = useAuthStore();
   
   // State for different data sections
   const [popularPosts, setPopularPosts] = useState<any[]>([]);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
-  const [stats, setStats] = useState<Stats>({
-    totalUsers: 0,
-    totalTopics: 0,
-    totalPosts: 0,
-    totalComments: 0,
-  });
   
   // Loading states
   const [popularLoading, setPopularLoading] = useState(true);
   const [recentLoading, setRecentLoading] = useState(true);
   const [topicsLoading, setTopicsLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
 
   // Fetch all data
   useEffect(() => {
@@ -111,15 +86,6 @@ const HomePage: React.FC = () => {
       } finally {
         setTopicsLoading(false);
       }
-
-      // Mock stats for now (you can create a stats endpoint later)
-      setStatsLoading(false);
-      setStats({
-        totalUsers: 1250,
-        totalTopics: 45,
-        totalPosts: 3200,
-        totalComments: 8900,
-      });
     };
 
     fetchHomeData();
@@ -176,9 +142,9 @@ const HomePage: React.FC = () => {
       />
 
       <Container maxWidth="lg" sx={{ position: 'relative', py: { xs: 8, md: 12 } }}>
-        <Grid container spacing={4} alignItems="center">
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Box sx={{ textAlign: { xs: 'center', md: 'left' } }}>
+        <Grid container spacing={4} justifyContent="center">
+          <Grid size={{ xs: 12, md: 10, lg: 8 }}>
+            <Box sx={{ textAlign: 'center' }}>
               {!isAuthenticated ? (
                 <>
                   <Typography
@@ -201,7 +167,7 @@ const HomePage: React.FC = () => {
                       mb: 4,
                       opacity: 0.9,
                       maxWidth: 600,
-                      mx: { xs: 'auto', md: 0 },
+                      mx: 'auto',
                     }}
                   >
                     Join the conversation. Share your ideas. Connect with like-minded people from around the world.
@@ -209,7 +175,7 @@ const HomePage: React.FC = () => {
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     spacing={2}
-                    sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}
+                    sx={{ justifyContent: 'center' }}
                   >
                     <Button
                       variant="contained"
@@ -267,7 +233,7 @@ const HomePage: React.FC = () => {
                       mb: 4,
                       opacity: 0.9,
                       maxWidth: 600,
-                      mx: { xs: 'auto', md: 0 },
+                      mx: 'auto',
                     }}
                   >
                     Ready to continue the conversation? Check out what's happening in your communities.
@@ -275,7 +241,7 @@ const HomePage: React.FC = () => {
                   <Stack
                     direction={{ xs: 'column', sm: 'row' }}
                     spacing={2}
-                    sx={{ justifyContent: { xs: 'center', md: 'flex-start' } }}
+                    sx={{ justifyContent: 'center' }}
                   >
                     <Button
                       variant="contained"
@@ -283,7 +249,6 @@ const HomePage: React.FC = () => {
                       size="large"
                       onClick={() => navigate('/topics')}
                       sx={{ py: 1.5, px: 4 }}
-                      startIcon={<Search />}
                     >
                       Browse Topics
                     </Button>
@@ -301,7 +266,6 @@ const HomePage: React.FC = () => {
                           backgroundColor: alpha(theme.palette.common.white, 0.1),
                         },
                       }}
-                      startIcon={<Add />}
                     >
                       Create Post
                     </Button>
@@ -309,60 +273,6 @@ const HomePage: React.FC = () => {
                 </>
               )}
             </Box>
-          </Grid>
-          
-          {/* Stats Cards - Desktop */}
-          <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
-            <Paper
-              sx={{
-                p: 3,
-                backgroundColor: alpha(theme.palette.common.white, 0.15),
-                backdropFilter: 'blur(10px)',
-                borderRadius: 3,
-              }}
-            >
-              <Typography variant="h6" gutterBottom sx={{ color: 'white', opacity: 0.9 }}>
-                Community Stats
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <Box sx={{ textAlign: 'center', p: 2 }}>
-                    <Group sx={{ fontSize: 40, mb: 1, color: 'secondary.main' }} />
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                      {statsLoading ? <Skeleton width={60} /> : stats.totalUsers.toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Members</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Box sx={{ textAlign: 'center', p: 2 }}>
-                    <Forum sx={{ fontSize: 40, mb: 1, color: 'secondary.main' }} />
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                      {statsLoading ? <Skeleton width={60} /> : stats.totalTopics.toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Topics</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Box sx={{ textAlign: 'center', p: 2 }}>
-                    <Whatshot sx={{ fontSize: 40, mb: 1, color: 'secondary.main' }} />
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                      {statsLoading ? <Skeleton width={60} /> : stats.totalPosts.toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Posts</Typography>
-                  </Box>
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <Box sx={{ textAlign: 'center', p: 2 }}>
-                    <Schedule sx={{ fontSize: 40, mb: 1, color: 'secondary.main' }} />
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                      {statsLoading ? <Skeleton width={60} /> : stats.totalComments.toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8 }}>Comments</Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Paper>
           </Grid>
         </Grid>
       </Container>
@@ -431,50 +341,6 @@ const HomePage: React.FC = () => {
       <HeroSection />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Stats Cards - Mobile */}
-        <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 4 }}>
-          <Paper sx={{ p: 2, borderRadius: 2 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Group color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {statsLoading ? <Skeleton /> : stats.totalUsers.toLocaleString()}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">Members</Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Forum color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {statsLoading ? <Skeleton /> : stats.totalTopics.toLocaleString()}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">Topics</Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Whatshot color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {statsLoading ? <Skeleton /> : stats.totalPosts.toLocaleString()}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">Posts</Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6 }}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Schedule color="primary" />
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {statsLoading ? <Skeleton /> : stats.totalComments.toLocaleString()}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">Comments</Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Box>
-
         {/* Trending Topics */}
         <Box sx={{ mb: 6 }}>
           <SectionHeader 

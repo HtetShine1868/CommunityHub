@@ -53,41 +53,72 @@ func (h *CommentHandler) GetCommentsByPost(c *gin.Context) {
 
 // CreateComment - Create a new comment
 func (h *CommentHandler) CreateComment(c *gin.Context) {
+    // Log the incoming request
+    fmt.Println("\n=== CreateComment called ===")
+    
+    // 1. Parse post ID
     postID, err := uuid.Parse(c.Param("id"))
     if err != nil {
+        fmt.Printf("❌ Invalid post ID format: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
         return
     }
+    fmt.Printf("✅ Post ID: %s\n", postID)
 
-    // Verify post exists
+    // 2. Verify post exists
     post, err := h.postRepo.FindByID(postID)
     if err != nil {
+        fmt.Printf("❌ Post not found: %v\n", err)
         c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
         return
     }
+    fmt.Printf("✅ Post found: %s (locked: %v)\n", post.ID, post.IsLocked)
 
+    // 3. Check if post is locked
+    if post.IsLocked {
+        fmt.Println("❌ Post is locked")
+        c.JSON(http.StatusForbidden, gin.H{"error": "this post is locked - no new comments allowed"})
+        return
+    }
+
+    // 4. Parse request body
     var req struct {
         Content  string     `json:"content" binding:"required"`
         ParentID *uuid.UUID `json:"parentId"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
+        fmt.Printf("❌ Invalid request body: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
+    fmt.Printf("✅ Request content length: %d, ParentID: %v\n", len(req.Content), req.ParentID)
 
+    // 5. Get user ID from context
     userIDStr := c.GetString("userID")
     if userIDStr == "" {
+        fmt.Println("❌ User ID not found in context")
+        // Check all context keys for debugging
+        fmt.Println("Context keys:")
+        for _, key := range []string{"userID", "username", "email", "role"} {
+            val, exists := c.Get(key)
+            fmt.Printf("  %s: exists=%v, value=%v\n", key, exists, val)
+        }
         c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
         return
     }
+    fmt.Printf("✅ User ID string: %s\n", userIDStr)
 
+    // 6. Parse user ID
     userID, err := uuid.Parse(userIDStr)
     if err != nil {
+        fmt.Printf("❌ Invalid user ID format: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
         return
     }
+    fmt.Printf("✅ Parsed User ID: %s\n", userID)
 
+    // 7. Create comment object
     comment := &models.Comment{
         ID:        uuid.New(),
         Content:   req.Content,
@@ -99,19 +130,38 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
     }
+    fmt.Printf("✅ Comment object created: ID=%s, UserID=%s, PostID=%s\n", 
+        comment.ID, comment.UserID, comment.PostID)
 
+    // 8. Save to database
+    fmt.Println("Attempting to save to database...")
     if err := h.commentRepo.Create(comment); err != nil {
-        fmt.Printf("Error creating comment: %v\n", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
+        fmt.Printf("❌ Database error: %v\n", err)
+        // Check for specific database errors
+        if err.Error() contains "foreign key constraint" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user or post reference"})
+        } else if err.Error() contains "duplicate key" {
+            c.JSON(http.StatusConflict, gin.H{"error": "comment already exists"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
+        }
         return
     }
+    fmt.Println("✅ Comment saved to database successfully")
 
-    // Fetch the created comment with user data
+    // 9. Fetch the created comment with user data
+    fmt.Println("Fetching created comment...")
     created, err := h.commentRepo.FindByID(comment.ID)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "comment created but failed to fetch"})
+        fmt.Printf("❌ Failed to fetch created comment: %v\n", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": "comment created but failed to fetch",
+            "comment_id": comment.ID,
+        })
         return
     }
+    fmt.Printf("✅ Comment fetched successfully: ID=%s, User=%s\n", 
+        created.ID, created.User.Username)
 
     c.JSON(http.StatusCreated, created)
 }

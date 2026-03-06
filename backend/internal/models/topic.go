@@ -20,7 +20,7 @@ type Topic struct {
     CreatedAt   time.Time      `gorm:"column:created_at" json:"createdAt"`
     UpdatedAt   time.Time      `gorm:"column:updated_at" json:"updatedAt"`
     DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
-    
+    PostCount   int64          `gorm:"-" json:"postCount"`
     User        User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
     Category    *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 }

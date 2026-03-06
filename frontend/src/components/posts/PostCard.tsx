@@ -33,6 +33,7 @@ interface PostCardProps {
   onDelete?: () => void;
   onPin?: () => void;
   onLock?: () => void;
+  topicCreatorId?: string; // Add this to identify who created the topic
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -42,6 +43,7 @@ const PostCard: React.FC<PostCardProps> = ({
   onDelete,
   onPin,
   onLock,
+  topicCreatorId,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -49,9 +51,15 @@ const PostCard: React.FC<PostCardProps> = ({
   const [liked, setLiked] = useState(post.liked || false);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
 
+  // Permission checks
   const isAuthor = user?.id === post.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
-  const canPin = isAdmin;
+  const isTopicCreator = user?.id === topicCreatorId; // Check if user is topic creator
+  
+  // Pin permission: ONLY topic creator or admin
+  const canPin = isTopicCreator || isAdmin;
+  
+  // Edit/Delete permissions: post author or admin
   const canEdit = isAuthor || isAdmin;
   const canDelete = isAuthor || isAdmin;
 
@@ -150,7 +158,8 @@ const PostCard: React.FC<PostCardProps> = ({
             )}
           </Box>
 
-          {(canEdit || canPin) && (
+          {/* Show menu if user has any permission */}
+          {(canEdit || canPin || isAdmin) && (
             <>
               <IconButton size="small" onClick={handleMenuOpen}>
                 <MoreVert fontSize="small" />
@@ -160,22 +169,29 @@ const PostCard: React.FC<PostCardProps> = ({
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
               >
+                {/* Edit option - for post author or admin */}
                 {canEdit && (
                   <MenuItem onClick={handleEdit}>
                     <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
                   </MenuItem>
                 )}
+                
+                {/* Delete option - for post author or admin */}
                 {canDelete && (
                   <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
                     <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
                   </MenuItem>
                 )}
+                
+                {/* Pin option - ONLY for topic creator or admin */}
                 {canPin && (
                   <MenuItem onClick={handlePin}>
                     <PushPin fontSize="small" sx={{ mr: 1 }} />
                     {post.isPinned ? 'Unpin' : 'Pin'}
                   </MenuItem>
                 )}
+                
+                {/* Lock option - for admin only */}
                 {isAdmin && (
                   <MenuItem onClick={handleLock}>
                     <Lock fontSize="small" sx={{ mr: 1 }} />

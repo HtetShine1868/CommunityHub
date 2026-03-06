@@ -133,21 +133,20 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
     fmt.Printf("✅ Comment object created: ID=%s, UserID=%s, PostID=%s\n", 
         comment.ID, comment.UserID, comment.PostID)
 
-    // 8. Save to database
-    fmt.Println("Attempting to save to database...")
-    if err := h.commentRepo.Create(comment); err != nil {
-        fmt.Printf("❌ Database error: %v\n", err)
-        // Check for specific database errors
-        if err.Error() contains "foreign key constraint" {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user or post reference"})
-        } else if err.Error() contains "duplicate key" {
-            c.JSON(http.StatusConflict, gin.H{"error": "comment already exists"})
-        } else {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
-        }
-        return
+// 8. Save to database
+fmt.Println("Attempting to save to database...")
+if err := h.commentRepo.Create(comment); err != nil {
+    fmt.Printf("❌ Database error: %v\n", err)
+    // Check for specific database errors using strings.Contains
+    if strings.Contains(err.Error(), "foreign key constraint") {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user or post reference"})
+    } else if strings.Contains(err.Error(), "duplicate key") {
+        c.JSON(http.StatusConflict, gin.H{"error": "comment already exists"})
+    } else {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
     }
-    fmt.Println("✅ Comment saved to database successfully")
+    return
+}
 
     // 9. Fetch the created comment with user data
     fmt.Println("Fetching created comment...")

@@ -14,6 +14,7 @@ import {
   Comment,
   PushPin,
 } from '@mui/icons-material';
+import { useAuthStore } from '../../store/authStore';
 import { Post } from '../../types/post.types';
 import { Comment as CommentType } from '../../types/comment.types';
 import PostCard from '../posts/PostCard';
@@ -46,6 +47,9 @@ interface ProfileTabsProps {
   };
   onPostLike?: (postId: string) => void;
   onCommentLike?: (commentId: string) => void;
+  onCommentReply?: (commentId: string, content: string) => void;
+  onCommentDelete?: (commentId: string) => void;
+  onCommentEdit?: (commentId: string, content: string) => void;
   pageSize?: number;
 }
 
@@ -58,8 +62,13 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
   pagination,
   onPostLike,
   onCommentLike,
+  onCommentReply,
+  onCommentDelete,
+  onCommentEdit,
   pageSize = 10,
 }) => {
+  const { user } = useAuthStore();
+
   const calculateTotalPages = (total: number) => Math.ceil(total / pageSize);
 
   const renderPinnedBadge = (isPinned: boolean) => {
@@ -148,9 +157,11 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
                   <CommentCard
                     comment={comment}
                     onLike={() => onCommentLike?.(comment.id)}
-                    onReply={() => {}}
-                    onDelete={() => {}}
-                    onEdit={() => {}}
+                    onReply={(content) => onCommentReply?.(comment.id, content)}
+                    onDelete={() => onCommentDelete?.(comment.id)}
+                    onEdit={(content) => onCommentEdit?.(comment.id, content)}
+                    currentUserId={user?.id}
+                    isPostAuthor={false} // You might want to pass this from parent if needed
                   />
                 </Box>
               ))}

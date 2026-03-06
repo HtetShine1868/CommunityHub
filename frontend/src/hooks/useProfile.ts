@@ -144,16 +144,12 @@ export const useProfile = (userId?: string) => {
     commentsLoading,
     error,
     isOwnProfile,
-    
-    // Pagination
     postsPage,
     commentsPage,
     postsTotal,
     commentsTotal,
     setPostsPage,
     setCommentsPage,
-    
-    // Actions
     updateProfile,
     refresh: fetchProfile,
     refreshPosts: () => fetchPosts(1),

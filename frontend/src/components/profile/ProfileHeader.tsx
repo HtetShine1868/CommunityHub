@@ -136,12 +136,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <Typography variant="body2">{stats.comments}</Typography>
                 </Box>
               </Tooltip>
-              <Tooltip title="Pinned Posts">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PushPin color="action" fontSize="small" />
-                  <Typography variant="body2">{stats.pinnedPosts}</Typography>
-                </Box>
-              </Tooltip>
               <Tooltip title="Pinned Comments">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <PushPin color="action" fontSize="small" />

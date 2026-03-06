@@ -40,6 +40,11 @@ func (r *TopicRepository) FindAll() ([]models.Topic, error) {
         fmt.Printf("Database error in FindAll: %v\n", err)
         return nil, err
     }
+    for i := range topics {
+        var count int64
+        r.db.Model(&models.Post{}).Where("topic_id = ?", topics[i].ID).Count(&count)
+        topics[i].PostCount = count
+    }
     return topics, nil
 }
 
@@ -53,6 +58,9 @@ func (r *TopicRepository) FindByID(id uuid.UUID) (*models.Topic, error) {
         fmt.Printf("Database error in FindByID: %v\n", err)
         return nil, err
     }
+    var count int64
+    r.db.Model(&models.Post{}).Where("topic_id = ?", topic.ID).Count(&count)
+    topic.PostCount = count
     return &topic, nil
 }
 

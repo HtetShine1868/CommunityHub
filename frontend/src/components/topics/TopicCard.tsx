@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,23 +10,18 @@ import {
   Menu,
   MenuItem,
   useTheme,
-  Tooltip,
-  Skeleton,
 } from '@mui/material';
 import {
   Forum,
-  People,
   Lock,
   Public,
   MoreVert,
   Edit,
   Delete,
-  Category as CategoryIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Topic } from '../../types/topic.types';
 import { useAuthStore } from '../../store/authStore';
-import { postService } from '../../services/post.service';
 
 interface TopicCardProps {
   topic: Topic;
@@ -39,27 +34,6 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [postCount, setPostCount] = useState<number>(topic.postCount || 0);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch actual post count if not provided
-  useEffect(() => {
-    if (topic.postCount === undefined && topic.id) {
-      const fetchPostCount = async () => {
-        setLoading(true);
-        try {
-          // You'll need to add this method to your postService
-          const count = await postService.getPostCountByTopic(topic.id);
-          setPostCount(count);
-        } catch (error) {
-          console.error('Failed to fetch post count:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchPostCount();
-    }
-  }, [topic.id, topic.postCount]);
 
   const isAuthor = user?.id === topic.userId;
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
@@ -203,10 +177,9 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Forum fontSize="small" color="action" />
             <Typography variant="caption" color="text.secondary">
-              {loading ? <Skeleton width={30} /> : `${postCount} ${postCount === 1 ? 'post' : 'posts'}`}
+              {topic.postCount || 0} {topic.postCount === 1 ? 'post' : 'posts'}
             </Typography>
           </Box>
-
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>

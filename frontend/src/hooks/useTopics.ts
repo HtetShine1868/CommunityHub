@@ -97,7 +97,6 @@ export const useTopics = () => {
     setError(null);
     try {
       await topicService.deleteTopic(id);
-      // Remove the deleted topic from the list
       setTopics(prev => prev.filter(t => t.id !== id));
       addNotification({ type: 'success', message: 'Topic deleted successfully!' });
     } catch (err: any) {

@@ -17,6 +17,7 @@ import PostDetailPage from './pages/PostDetailPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import SearchPage from './pages/SearchPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
+              <Route path="/search" element={<SearchPage />} />
             </Route>
             
             {/* Catch all - redirect to home */}

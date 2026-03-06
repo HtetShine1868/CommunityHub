@@ -76,3 +76,6 @@ func (r *TopicRepository) Delete(id uuid.UUID) error {
     }
     return nil
 }
+func (r *TopicRepository) GetDB() *gorm.DB {
+    return r.db
+}

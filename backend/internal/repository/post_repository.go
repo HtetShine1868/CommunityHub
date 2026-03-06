@@ -117,3 +117,6 @@ func (r *PostRepository) ToggleLock(id uuid.UUID) error {
     return r.db.Model(&models.Post{}).Where("id = ?", id).
         Update("is_locked", gorm.Expr("NOT is_locked")).Error
 }
+func (r *PostRepository) GetDB() *gorm.DB {
+    return r.db
+}

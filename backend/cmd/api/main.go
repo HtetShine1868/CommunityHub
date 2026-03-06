@@ -50,6 +50,8 @@ func main() {
     likeHandler := handlers.NewLikeHandler(likeRepo, postRepo, commentRepo)
     userHandler := handlers.NewUserHandler(userRepo, postRepo, commentRepo, topicRepo)
     categoryHandler := handlers.NewCategoryHandler(categoryRepo)
+    searchHandler := handlers.NewSearchHandler(postRepo, topicRepo, userRepo, categoryRepo)
+    
 
     router := gin.Default()
     frontendURL := os.Getenv("FRONTEND_URL")
@@ -109,6 +111,9 @@ func main() {
     })
     router.GET("/api/categories", categoryHandler.GetAllCategories)
     router.GET("/api/categories/:id", categoryHandler.GetCategory)
+    router.GET("/api/search", searchHandler.Search)
+    router.GET("/api/trending", searchHandler.GetTrending)
+    router.GET("/api/categories/popular", searchHandler.GetPopularCategories)
 
     router.GET("/api/topics", middleware.OptionalAuthMiddleware(), topicHandler.GetAllTopics)
     router.GET("/api/topics/:id", middleware.OptionalAuthMiddleware(), topicHandler.GetTopic)

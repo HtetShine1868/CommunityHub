@@ -36,7 +36,7 @@ export const usePosts = (topicId?: string) => {
     fetchPosts();
   }, [fetchPosts]);
 
-  const createPost = async (data: CreatePostData) => {
+  const createPost = async (data: CreatePostData): Promise<Post> => {
     if (!topicId) throw new Error('Topic ID is required');
     setLoading(true);
     setError(null);

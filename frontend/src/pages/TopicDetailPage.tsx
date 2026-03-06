@@ -19,6 +19,15 @@ import {
   MenuItem,
   useTheme,
   useMediaQuery,
+  TextField,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  SelectChangeEvent,
+  Drawer,
+  Badge,
+  Tooltip,
 } from '@mui/material';
 import {
   Add,
@@ -31,11 +40,20 @@ import {
   Delete,
   MoreVert,
   Share,
+  Search as SearchIcon,
+  FilterList,
+  Clear,
+  Sort,
+  AccessTime,
+  Whatshot,
+  TrendingUp,
+  Close,
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/authStore';
 import { topicService } from '../services/topic.service';
 import { postService } from '../services/post.service';
 import { likeService } from '../services/like.service';
+import { searchService } from '../services/search.service';
 import { Topic } from '../types/topic.types';
 import { Post } from '../types/post.types';
 import PostCard from '../components/posts/PostCard';
@@ -44,6 +62,13 @@ import EditPostModal from '../components/posts/EditPostModal';
 import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useUIStore } from '../store/uiStore';
+import { useDebounce } from '../hooks/useDebounce';
+
+interface SearchFilters {
+  query: string;
+  sortBy: 'latest' | 'popular' | 'mostLiked' | 'oldest';
+  timeFilter: 'all' | 'today' | 'week' | 'month' | 'year';
+}
 
 const TopicDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -56,10 +81,22 @@ const TopicDetailPage: React.FC = () => {
   // State
   const [topic, setTopic] = useState<Topic | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [postsLoading, setPostsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [postsError, setPostsError] = useState<string | null>(null);
+  
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>({
+    query: '',
+    sortBy: 'latest',
+    timeFilter: 'all',
+  });
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -82,6 +119,14 @@ const TopicDetailPage: React.FC = () => {
   const canCreatePost = isAuthenticated && !topic?.isPrivate;
   const canEdit = isAuthor || isAdmin;
 
+  // Count active filters
+  useEffect(() => {
+    let count = 0;
+    if (filters.sortBy !== 'latest') count++;
+    if (filters.timeFilter !== 'all') count++;
+    setActiveFilterCount(count);
+  }, [filters]);
+
   // Fetch topic details
   const fetchTopic = useCallback(async () => {
     if (!id) return;
@@ -97,7 +142,7 @@ const TopicDetailPage: React.FC = () => {
     }
   }, [id]);
 
-  // Fetch posts for this topic
+  // Fetch all posts for this topic
   const fetchPosts = useCallback(async () => {
     if (!id) return;
     
@@ -105,12 +150,13 @@ const TopicDetailPage: React.FC = () => {
     setPostsError(null);
     
     try {
-      console.log('📥 Fetching posts for topic:', id, 'page:', page);
-      const response = await postService.getPostsByTopic(id, page, pageSize);
+      console.log('📥 Fetching posts for topic:', id);
+      // Fetch more posts to allow client-side filtering
+      const response = await postService.getPostsByTopic(id, 1, 100); // Get up to 100 posts
       
       setPosts(response.data || []);
       setTotal(response.total || 0);
-      setTotalPages(response.totalPages || 0);
+      setTotalPages(Math.ceil((response.total || 0) / pageSize));
       
     } catch (err: any) {
       console.error('❌ Failed to fetch posts:', err);
@@ -119,7 +165,77 @@ const TopicDetailPage: React.FC = () => {
     } finally {
       setPostsLoading(false);
     }
-  }, [id, page, pageSize]);
+  }, [id]);
+
+  // Apply filters and search to posts
+  useEffect(() => {
+    if (!posts.length) {
+      setFilteredPosts([]);
+      return;
+    }
+
+    let filtered = [...posts];
+
+    // Apply search filter
+    if (debouncedSearchQuery) {
+      const query = debouncedSearchQuery.toLowerCase();
+      filtered = filtered.filter(post => 
+        post.title.toLowerCase().includes(query) || 
+        post.content.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply time filter
+    if (filters.timeFilter !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (filters.timeFilter) {
+        case 'today':
+          filterDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          filterDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(post => new Date(post.createdAt) >= filterDate);
+    }
+
+    // Apply sorting
+    switch (filters.sortBy) {
+      case 'latest':
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        break;
+      case 'popular':
+        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+        break;
+      case 'mostLiked':
+        filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+        break;
+    }
+
+    setFilteredPosts(filtered);
+    setTotal(filtered.length);
+    setTotalPages(Math.ceil(filtered.length / pageSize));
+    setPage(1); // Reset to first page when filters change
+  }, [posts, debouncedSearchQuery, filters]);
+
+  // Get current page of filtered posts
+  const getCurrentPagePosts = () => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredPosts.slice(start, end);
+  };
 
   // Initial data loading
   useEffect(() => {
@@ -179,7 +295,6 @@ const TopicDetailPage: React.FC = () => {
     try {
       await postService.deletePost(postId);
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-      setTotal(prev => prev - 1);
       addNotification({
         type: 'success',
         message: 'Post deleted successfully',
@@ -256,10 +371,14 @@ const TopicDetailPage: React.FC = () => {
   };
 
   // Handle post creation success
-  const handlePostCreated = () => {
+  const handlePostCreated = (newPost: Post) => {
     console.log('📝 Post created, refreshing posts...');
-    fetchPosts();
+    setPosts(prev => [newPost, ...prev]);
     setCreatePostModalOpen(false);
+    addNotification({
+      type: 'success',
+      message: 'Post created successfully!',
+    });
   };
 
   // Handle post update success
@@ -268,6 +387,28 @@ const TopicDetailPage: React.FC = () => {
     fetchPosts();
     setEditPostModalOpen(false);
     setSelectedPost(null);
+  };
+
+  // Filter handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
+  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      query: '',
+      sortBy: 'latest',
+      timeFilter: 'all',
+    });
+    setSearchQuery('');
   };
 
   // Menu handlers
@@ -489,32 +630,149 @@ const TopicDetailPage: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Posts Section Header */}
+      {/* Search & Filter Section */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Search Bar */}
+          <TextField
+            fullWidth
+            placeholder="Search posts in this topic..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            variant="outlined"
+            size="medium"
+            sx={{ flex: 1 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleClearSearch} edge="end" size="small">
+                    <Clear />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          {/* Filter Button with Badge */}
+          <Tooltip title="Filter posts">
+            <Badge badgeContent={activeFilterCount} color="primary">
+              <Button
+                variant={showFilters ? 'contained' : 'outlined'}
+                startIcon={<FilterList />}
+                onClick={() => setShowFilters(!showFilters)}
+                sx={{ minWidth: 100 }}
+              >
+                Filters
+              </Button>
+            </Badge>
+          </Tooltip>
+
+          {/* Reset Filters Button (visible when filters active) */}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="text"
+              color="error"
+              startIcon={<Clear />}
+              onClick={handleResetFilters}
+            >
+              Reset
+            </Button>
+          )}
+        </Box>
+
+        {/* Filter Panel */}
+        {showFilters && (
+          <Box sx={{ 
+            mt: 3, 
+            p: 2, 
+            bgcolor: 'action.hover', 
+            borderRadius: 1,
+            display: 'flex',
+            gap: 2,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}>
+            <Typography variant="subtitle2" sx={{ minWidth: 60 }}>
+              Sort by:
+            </Typography>
+            
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <Select
+                value={filters.sortBy}
+                onChange={(e: SelectChangeEvent) => handleFilterChange('sortBy', e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="latest">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTime fontSize="small" /> Latest
+                  </Box>
+                </MenuItem>
+                <MenuItem value="oldest">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTime fontSize="small" /> Oldest
+                  </Box>
+                </MenuItem>
+                <MenuItem value="popular">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Whatshot fontSize="small" color="error" /> Most Viewed
+                  </Box>
+                </MenuItem>
+                <MenuItem value="mostLiked">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <TrendingUp fontSize="small" color="primary" /> Most Liked
+                  </Box>
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            <Typography variant="subtitle2" sx={{ ml: 2, minWidth: 80 }}>
+              Time filter:
+            </Typography>
+            
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={filters.timeFilter}
+                onChange={(e: SelectChangeEvent) => handleFilterChange('timeFilter', e.target.value)}
+              >
+                <MenuItem value="all">All Time</MenuItem>
+                <MenuItem value="today">Last 24 Hours</MenuItem>
+                <MenuItem value="week">This Week</MenuItem>
+                <MenuItem value="month">This Month</MenuItem>
+                <MenuItem value="year">This Year</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        )}
+      </Paper>
+
+      {/* Results Info */}
       <Box sx={{ 
         display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' },
         justifyContent: 'space-between', 
-        alignItems: { xs: 'flex-start', sm: 'center' }, 
-        gap: 2,
-        mb: 3 
+        alignItems: 'center',
+        mb: 2,
+        px: 1,
       }}>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
-          Posts {total > 0 && `(${total})`}
+        <Typography variant="body2" color="text.secondary">
+          {filteredPosts.length === 0 
+            ? 'No posts found' 
+            : `Found ${filteredPosts.length} ${filteredPosts.length === 1 ? 'post' : 'posts'}`
+          }
+          {searchQuery && ` matching "${searchQuery}"`}
+          {filters.timeFilter !== 'all' && ` from ${filters.timeFilter}`}
         </Typography>
-        
-        {canCreatePost && (
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setCreatePostModalOpen(true)}
-            fullWidth={isMobile}
-          >
-            New Post
-          </Button>
+
+        {filteredPosts.length > 0 && (
+          <Typography variant="caption" color="text.secondary">
+            Page {page} of {totalPages}
+          </Typography>
         )}
       </Box>
-
-      <Divider sx={{ mb: 3 }} />
 
       {/* Posts List */}
       {postsLoading ? (
@@ -525,12 +783,14 @@ const TopicDetailPage: React.FC = () => {
         <Alert severity="error" sx={{ mb: 3 }}>
           {postsError}
         </Alert>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary" paragraph>
-            No posts yet in this topic.
+            {searchQuery || activeFilterCount > 0 
+              ? 'No posts match your search criteria.' 
+              : 'No posts yet in this topic.'}
           </Typography>
-          {canCreatePost ? (
+          {canCreatePost && !searchQuery && activeFilterCount === 0 ? (
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -538,19 +798,18 @@ const TopicDetailPage: React.FC = () => {
             >
               Create the First Post
             </Button>
-          ) : topic.isPrivate ? (
-            <Typography variant="body2" color="text.secondary">
-              This is a private topic. Only members can create posts.
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Please login to create posts.
-            </Typography>
+          ) : (searchQuery || activeFilterCount > 0) && (
+            <Button
+              variant="outlined"
+              onClick={handleResetFilters}
+            >
+              Clear Filters
+            </Button>
           )}
         </Paper>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {posts.map((post) => (
+          {getCurrentPagePosts().map((post) => (
             <PostCard
               key={post.id}
               post={post}

@@ -167,49 +167,110 @@ if err := h.commentRepo.Create(comment); err != nil {
 
 // UpdateComment - Update a comment
 func (h *CommentHandler) UpdateComment(c *gin.Context) {
+    fmt.Println("\n========== UPDATE COMMENT DEBUG ==========")
+    
+    // 1. Parse comment ID
     id, err := uuid.Parse(c.Param("id"))
     if err != nil {
+        fmt.Printf("❌ Invalid comment ID: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment id"})
         return
     }
+    fmt.Printf("📌 Comment ID: %s\n", id)
 
+    // 2. Parse request body
     var req struct {
         Content string `json:"content" binding:"required"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
+        fmt.Printf("❌ Invalid request body: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
+    fmt.Printf("📝 Request content: %q (length: %d)\n", req.Content, len(req.Content))
 
+    // 3. Get user info from context
+    userID := c.GetString("userID")
+    role := c.GetString("role")
+    fmt.Printf("👤 UserID: %s, Role: %s\n", userID, role)
+
+    // 4. Fetch the comment BEFORE update
     comment, err := h.commentRepo.FindByID(id)
     if err != nil {
+        fmt.Printf("❌ Comment not found: %v\n", err)
         c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
         return
     }
+    fmt.Printf("✅ Found comment - BEFORE update:\n")
+    fmt.Printf("   - ID: %s\n", comment.ID)
+    fmt.Printf("   - Content: %q\n", comment.Content)
+    fmt.Printf("   - Author ID: %s\n", comment.UserID.String())
+    fmt.Printf("   - IsEdited: %v\n", comment.IsEdited)
 
-    // Check ownership
-    userID := c.GetString("userID")
-    role := c.GetString("role")
-    
+    // 5. Check ownership
     if comment.UserID.String() != userID && role != "admin" && role != "moderator" {
+        fmt.Printf("❌ Permission denied - User %s cannot edit comment by %s\n", userID, comment.UserID.String())
         c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this comment"})
         return
     }
+    fmt.Println("✅ Permission granted")
 
+    // 6. Update the comment
+    oldContent := comment.Content
     comment.Content = req.Content
     comment.IsEdited = true
     now := time.Now()
     comment.EditedAt = &now
-    comment.UpdatedAt = time.Now()
+    comment.UpdatedAt = now
 
+    fmt.Printf("🔄 Updating content: %q -> %q\n", oldContent, comment.Content)
+    fmt.Printf("   IsEdited set to: %v\n", comment.IsEdited)
+    fmt.Printf("   EditedAt set to: %v\n", comment.EditedAt)
+    fmt.Printf("   UpdatedAt set to: %v\n", comment.UpdatedAt)
+
+    // 7. Log the update map that will be sent to database
+    updateMap := map[string]interface{}{
+        "content":    comment.Content,
+        "is_edited":  comment.IsEdited,
+        "edited_at":  comment.EditedAt,
+        "updated_at": comment.UpdatedAt,
+    }
+    fmt.Printf("📦 Update map: %+v\n", updateMap)
+
+    fmt.Println("💾 Saving to database...")
+
+    // 8. Save to database
     if err := h.commentRepo.Update(comment); err != nil {
+        fmt.Printf("❌ Database error: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment"})
         return
     }
+    fmt.Println("✅ Database update successful")
 
-    // Return updated comment with user data
-    updated, _ := h.commentRepo.FindByID(id)
+    // 9. Fetch the updated comment to verify
+    updated, err := h.commentRepo.FindByID(id)
+    if err != nil {
+        fmt.Printf("⚠️ Warning: Could not fetch updated comment: %v\n", err)
+        // Return the comment we have even if fetch fails
+        c.JSON(http.StatusOK, comment)
+        return
+    }
+    
+    fmt.Printf("📤 AFTER update - Comment from database:\n")
+    fmt.Printf("   - ID: %s\n", updated.ID)
+    fmt.Printf("   - Content: %q\n", updated.Content)
+    fmt.Printf("   - IsEdited: %v\n", updated.IsEdited)
+    
+    if updated.Content == oldContent {
+        fmt.Println("⚠️ WARNING: Content did not change in database!")
+    } else if updated.Content == id.String() {
+        fmt.Println("⚠️ WARNING: Content was set to the comment ID!")
+    } else {
+        fmt.Println("✅ Content updated successfully!")
+    }
+    
+    fmt.Println("==========================================\n")
     c.JSON(http.StatusOK, updated)
 }
 

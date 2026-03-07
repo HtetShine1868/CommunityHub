@@ -6,29 +6,20 @@ import {
   TextField,
   Button,
   Box,
-  Link,
   Alert,
   IconButton,
   InputAdornment,
   useTheme,
-  Divider,
-  Checkbox,
-  FormControlLabel,
-  useMediaQuery,
 } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
   Email,
   Lock,
-  Google,
-  GitHub,
-  Facebook,
   ArrowForward,
-  PersonAdd,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,7 +28,6 @@ import { useAuth } from '../hooks/useAuth';
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  rememberMe: z.boolean().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -45,7 +35,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const LoginPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +42,12 @@ const LoginPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: 'onChange',
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false,
     },
   });
 
@@ -71,10 +58,6 @@ const LoginPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Login failed');
     }
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Logging in with ${provider}`);
   };
 
   return (
@@ -99,7 +82,6 @@ const LoginPage: React.FC = () => {
           height: 300,
           borderRadius: '50%',
           background: 'rgba(255, 255, 255, 0.1)',
-          zIndex: 0,
         }}
       />
       <Box
@@ -111,7 +93,6 @@ const LoginPage: React.FC = () => {
           height: 400,
           borderRadius: '50%',
           background: 'rgba(255, 255, 255, 0.1)',
-          zIndex: 0,
         }}
       />
 
@@ -126,57 +107,46 @@ const LoginPage: React.FC = () => {
             sx={{
               p: { xs: 3, sm: 4 },
               borderRadius: 4,
-              backdropFilter: 'blur(10px)',
-              backgroundColor: 'rgba(255, 255, 255, 0.98)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              backgroundColor: theme.palette.background.paper,
+              boxShadow: `0 20px 40px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'}`,
             }}
           >
-            {/* Logo/Header */}
+            {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 800,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1,
+                  fontSize: { xs: '2rem', sm: '2.5rem' },
+                }}
               >
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 800,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    mb: 1,
-                    fontSize: { xs: '2rem', sm: '2.5rem' },
-                  }}
-                >
-                  Welcome Back
-                </Typography>
-              </motion.div>
+                Welcome Back
+              </Typography>
               <Typography variant="body2" color="text.secondary">
-                Sign in to continue to Community Hub
+                Sign in to continue
               </Typography>
             </Box>
 
             {error && (
               <Alert 
                 severity="error" 
-                sx={{ 
-                  mb: 3,
-                  borderRadius: 2,
-                }}
+                sx={{ mb: 3, borderRadius: 2 }}
               >
                 {error}
               </Alert>
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Email Field - FIXED VISIBILITY */}
+              {/* Email Field */}
               <TextField
                 {...register('email')}
                 fullWidth
                 label="Email"
                 type="email"
-                placeholder="john@example.com"
                 margin="normal"
                 error={!!errors.email}
                 helperText={errors.email?.message}
@@ -187,37 +157,31 @@ const LoginPage: React.FC = () => {
                     </InputAdornment>
                   ),
                   sx: {
-                    color: '#000000', // Black text for visibility
-                    backgroundColor: '#ffffff',
+                    color: theme.palette.text.primary,
+                    backgroundColor: theme.palette.background.default,
                     '& input': {
-                      color: '#000000',
-                      fontWeight: 500,
+                      color: theme.palette.text.primary,
                       '&::placeholder': {
-                        color: '#666666',
-                        opacity: 1,
+                        color: theme.palette.text.secondary,
+                        opacity: 0.7,
                       },
                     },
                   },
                 }}
                 InputLabelProps={{
                   sx: {
-                    color: '#333333',
-                    fontWeight: 500,
+                    color: theme.palette.text.secondary,
                     '&.Mui-focused': {
                       color: theme.palette.primary.main,
-                    },
-                    '&.Mui-error': {
-                      color: theme.palette.error.main,
                     },
                   },
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#ffffff',
+                    backgroundColor: theme.palette.background.default,
                     borderRadius: 2,
                     '& fieldset': {
-                      borderColor: '#cccccc',
-                      borderWidth: 1,
+                      borderColor: theme.palette.divider,
                     },
                     '&:hover fieldset': {
                       borderColor: theme.palette.primary.main,
@@ -226,20 +190,16 @@ const LoginPage: React.FC = () => {
                       borderColor: theme.palette.primary.main,
                       borderWidth: 2,
                     },
-                    '&.Mui-error fieldset': {
-                      borderColor: theme.palette.error.main,
-                    },
                   },
                 }}
               />
 
-              {/* Password Field - FIXED VISIBILITY */}
+              {/* Password Field */}
               <TextField
                 {...register('password')}
                 fullWidth
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
                 margin="normal"
                 error={!!errors.password}
                 helperText={errors.password?.message}
@@ -255,28 +215,32 @@ const LoginPage: React.FC = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         size="small"
+                        sx={{
+                          color: theme.palette.text.secondary,
+                          '&:hover': {
+                            color: theme.palette.primary.main,
+                          },
+                        }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
                   sx: {
-                    color: '#000000', // Black text for visibility
-                    backgroundColor: '#ffffff',
+                    color: theme.palette.text.primary,
+                    backgroundColor: theme.palette.background.default,
                     '& input': {
-                      color: '#000000',
-                      fontWeight: 500,
+                      color: theme.palette.text.primary,
                       '&::placeholder': {
-                        color: '#666666',
-                        opacity: 1,
+                        color: theme.palette.text.secondary,
+                        opacity: 0.7,
                       },
                     },
                   },
                 }}
                 InputLabelProps={{
                   sx: {
-                    color: '#333333',
-                    fontWeight: 500,
+                    color: theme.palette.text.secondary,
                     '&.Mui-focused': {
                       color: theme.palette.primary.main,
                     },
@@ -284,11 +248,10 @@ const LoginPage: React.FC = () => {
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    backgroundColor: '#ffffff',
+                    backgroundColor: theme.palette.background.default,
                     borderRadius: 2,
                     '& fieldset': {
-                      borderColor: '#cccccc',
-                      borderWidth: 1,
+                      borderColor: theme.palette.divider,
                     },
                     '&:hover fieldset': {
                       borderColor: theme.palette.primary.main,
@@ -297,52 +260,9 @@ const LoginPage: React.FC = () => {
                       borderColor: theme.palette.primary.main,
                       borderWidth: 2,
                     },
-                    '&.Mui-error fieldset': {
-                      borderColor: theme.palette.error.main,
-                    },
                   },
                 }}
               />
-
-              {/* Remember Me & Forgot Password */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  mt: 2,
-                  mb: 3,
-                  flexDirection: { xs: 'column', sm: 'row' },
-                  gap: { xs: 2, sm: 0 },
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      {...register('rememberMe')}
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <Typography variant="body2" sx={{ color: '#333333' }}>
-                      Remember me
-                    </Typography>
-                  }
-                />
-                <Link
-                  href="#"
-                  sx={{
-                    color: theme.palette.primary.main,
-                    textDecoration: 'none',
-                    fontWeight: 500,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Forgot password?
-                </Link>
-              </Box>
 
               {/* Login Button */}
               <Button
@@ -350,126 +270,43 @@ const LoginPage: React.FC = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={isLoading || !isValid}
+                disabled={isLoading}
                 endIcon={<ArrowForward />}
                 sx={{
+                  mt: 3,
                   py: 1.5,
                   borderRadius: 2,
                   textTransform: 'none',
                   fontSize: '1rem',
                   fontWeight: 600,
                   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                  color: 'white',
+                  color: '#fff',
                   '&:hover': {
                     background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
-                  },
-                  '&.Mui-disabled': {
-                    background: theme.palette.action.disabledBackground,
                   },
                 }}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
 
-              {/* Social Login */}
-              <Box sx={{ mt: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Divider sx={{ flex: 1 }} />
-                  <Typography variant="body2" sx={{ px: 2, color: '#666666' }}>
-                    Or continue with
-                  </Typography>
-                  <Divider sx={{ flex: 1 }} />
-                </Box>
-
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    gap: 2, 
-                    justifyContent: 'center',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    startIcon={<Google />}
-                    onClick={() => handleSocialLogin('Google')}
-                    sx={{
-                      flex: 1,
-                      py: 1,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      borderColor: '#db4437',
-                      color: '#db4437',
-                      backgroundColor: '#ffffff',
-                      '&:hover': {
-                        borderColor: '#db4437',
-                        backgroundColor: 'rgba(219, 68, 55, 0.04)',
-                      },
-                    }}
-                  >
-                    Google
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<GitHub />}
-                    onClick={() => handleSocialLogin('GitHub')}
-                    sx={{
-                      flex: 1,
-                      py: 1,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      borderColor: '#333',
-                      color: '#333',
-                      backgroundColor: '#ffffff',
-                      '&:hover': {
-                        borderColor: '#333',
-                        backgroundColor: 'rgba(51, 51, 51, 0.04)',
-                      },
-                    }}
-                  >
-                    GitHub
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Facebook />}
-                    onClick={() => handleSocialLogin('Facebook')}
-                    sx={{
-                      flex: 1,
-                      py: 1,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      borderColor: '#4267B2',
-                      color: '#4267B2',
-                      backgroundColor: '#ffffff',
-                      '&:hover': {
-                        borderColor: '#4267B2',
-                        backgroundColor: 'rgba(66, 103, 178, 0.04)',
-                      },
-                    }}
-                  >
-                    Facebook
-                  </Button>
-                </Box>
-              </Box>
-
               {/* Register Link */}
               <Box sx={{ textAlign: 'center', mt: 3 }}>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" color="text.secondary">
                   Don't have an account?{' '}
-                  <Link
-                    component={RouterLink}
-                    to="/register"
+                  <Button
+                    onClick={() => navigate('/register')}
                     sx={{
                       color: theme.palette.primary.main,
                       fontWeight: 600,
-                      textDecoration: 'none',
+                      textTransform: 'none',
                       '&:hover': {
+                        backgroundColor: 'transparent',
                         textDecoration: 'underline',
                       },
                     }}
                   >
                     Create account
-                  </Link>
+                  </Button>
                 </Typography>
               </Box>
             </form>

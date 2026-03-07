@@ -34,11 +34,11 @@ func NewSearchHandler(
 
 type SearchFilters struct {
     Query      string   `form:"q"`
-    Type       string   `form:"type"` // "posts", "topics", "users", "all"
+    Type       string   `form:"type"`
     CategoryID string   `form:"categoryId"`
     Tags       []string `form:"tags"`
-    SortBy     string   `form:"sortBy"` // "relevance", "latest", "popular", "mostLiked"
-    TimeFilter string   `form:"time"`   // "today", "week", "month", "year", "all"
+    SortBy     string   `form:"sortBy"`
+    TimeFilter string   `form:"time"`
     Page       int      `form:"page,default=1"`
     PageSize   int      `form:"pageSize,default=20"`
 }

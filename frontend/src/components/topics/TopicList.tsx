@@ -5,8 +5,8 @@ import TopicCard from './TopicCard';
 
 interface TopicListProps {
   topics: Topic[];
-  onEdit?: (topicId: string) => void;  // Changed from Topic to string
-  onDelete?: (topicId: string) => void; // Changed from Topic to string
+  onEdit?: (topicId: string) => void;
+  onDelete?: (topicId: string) => void; 
   emptyMessage?: string;
 }
 
@@ -30,8 +30,8 @@ const TopicList: React.FC<TopicListProps> = ({
         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={topic.id}>
           <TopicCard 
             topic={topic} 
-            onEdit={() => onEdit?.(topic.id)}  // Pass the ID, not the whole topic
-            onDelete={() => onDelete?.(topic.id)} // Pass the ID, not the whole topic
+            onEdit={() => onEdit?.(topic.id)}  
+            onDelete={() => onDelete?.(topic.id)} 
           />
         </Grid>
       ))}

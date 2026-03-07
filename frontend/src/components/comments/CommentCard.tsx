@@ -84,8 +84,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
-      console.log('💬 Reply content from input:', replyContent.trim());
-      console.log('💬 Calling onReply with:', {
+      console.log('Reply content from input:', replyContent.trim());
+      console.log('Calling onReply with:', {
         commentId: comment.id,
         content: replyContent.trim()
       });
@@ -139,7 +139,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         },
       }}
     >
-      {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar

@@ -60,17 +60,17 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
     setSubmitting(true);
     try {
-      console.log('📝 Submitting comment - raw input:', newComment);
-      
+      console.log('Submitting comment - raw input:', newComment);
+
       const commentData = {
         content: newComment.trim()
       };
       
-      console.log('📤 Sending data:', commentData);
+      console.log('Sending data:', commentData);
       
       const createdComment = await commentService.createComment(postId, commentData);
       
-      console.log('✅ Server response:', createdComment);
+      console.log('Server response:', createdComment);
       
       setNewComment('');
       await fetchComments();
@@ -80,7 +80,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         message: 'Comment posted!',
       });
     } catch (error) {
-      console.error('❌ Failed to post comment:', error);
+      console.error(' Failed to post comment:', error);
       setError('Failed to post comment');
       addNotification({
         type: 'error',
@@ -92,15 +92,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleReply = async (commentId: string, content: string) => {
-    console.log('📝 handleReply received:', { commentId, content });
+    console.log('handleReply received:', { commentId, content });
     
     if (!content || !content.trim()) {
-      console.log('❌ Empty content, returning');
+      console.log('Empty content, returning');
       return;
     }
     
     try {
-      console.log('📤 Sending reply data:', {
+      console.log('Sending reply data:', {
         content: content.trim(),
         parentId: commentId
       });
@@ -112,7 +112,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       
       const createdReply = await commentService.createComment(postId, replyData);
       
-      console.log('✅ Reply created:', createdReply);
+      console.log('Reply created:', createdReply);
       
       await fetchComments();
       
@@ -121,7 +121,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         message: 'Reply posted!',
       });
     } catch (error) {
-      console.error('❌ Failed to post reply:', error);
+      console.error('Failed to post reply:', error);
       setError('Failed to post reply');
       addNotification({
         type: 'error',
@@ -131,12 +131,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleEdit = async (commentId: string, content: string) => {
-    console.log('📝 handleEdit received:', { commentId, content });
+    console.log('handleEdit received:', { commentId, content });
     
     if (!content.trim()) return;
     
     try {
-      console.log('📤 Sending edit data:', {
+      console.log(' Sending edit data:', {
         content: content.trim()
       });
       
@@ -146,9 +146,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       
       const updatedComment = await commentService.updateComment(commentId, editData);
       
-      console.log('✅ Comment updated:', updatedComment);
-      
-      // Update local state optimistically
+      console.log('Comment updated:', updatedComment);
       const updateCommentInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map(c => {
           if (c.id === commentId) {
@@ -168,7 +166,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         message: 'Comment updated!',
       });
     } catch (error) {
-      console.error('❌ Failed to update comment:', error);
+      console.error('Failed to update comment:', error);
       setError('Failed to update comment');
       addNotification({
         type: 'error',
@@ -181,11 +179,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!window.confirm('Delete this comment?')) return;
     
     try {
-      console.log('🗑️ Deleting comment:', commentId);
+      console.log('Deleting comment:', commentId);
       
       await commentService.deleteComment(commentId);
       
-      console.log('✅ Comment deleted');
+      console.log('Comment deleted');
       
       // Update local state
       const removeCommentFromTree = (commentsList: Comment[]): Comment[] => {
@@ -204,7 +202,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         message: 'Comment deleted',
       });
     } catch (error) {
-      console.error('❌ Failed to delete comment:', error);
+      console.error('Failed to delete comment:', error);
       setError('Failed to delete comment');
       addNotification({
         type: 'error',
@@ -245,7 +243,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       
       setComments(updateLikeInTree(comments));
     } catch (error) {
-      console.error('❌ Failed to like comment:', error);
+      console.error('Failed to like comment:', error);
       addNotification({
         type: 'error',
         message: 'Failed to like comment',

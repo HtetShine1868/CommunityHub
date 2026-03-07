@@ -196,26 +196,15 @@ const LandingPage: React.FC = () => {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                    <Avatar sx={{ bgcolor: theme.palette.primary.main }}>JD</Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        John Doe
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Posted in Technology • 2 hours ago
-                      </Typography>
-                    </Box>
                   </Box>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    🚀 The Future of Web Development
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Just discovered an amazing new framework that's going to revolutionize how we build web apps. Anyone else excited about this?
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Chip label="💬 24 comments" size="small" />
-                    <Chip label="❤️ 156 likes" size="small" />
-                  </Box>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                      🚀 Welcome to Community Hub!
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Community Hub is a place where people can create topics, share ideas, ask questions, and start meaningful discussions. 
+                      Join conversations, follow topics you care about, and connect with others in the community.
+                    </Typography>
                 </Paper>
               </motion.div>
             </Grid>

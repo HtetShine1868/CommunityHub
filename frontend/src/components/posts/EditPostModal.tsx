@@ -56,12 +56,7 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
     }
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove),
-    });
-  };
+
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -126,39 +121,6 @@ const EditPostModal: React.FC<EditPostModalProps> = ({
           disabled={loading}
         />
 
-        <Box sx={{ mt: 2 }}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Add Tags"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={loading}
-              placeholder="Type and press Enter"
-            />
-            <Button 
-              variant="outlined" 
-              onClick={handleAddTag}
-              disabled={!tagInput.trim() || loading}
-            >
-              Add
-            </Button>
-          </Box>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {formData.tags.map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                onDelete={() => handleRemoveTag(tag)}
-                size="small"
-                disabled={loading}
-              />
-            ))}
-          </Box>
-        </Box>
       </DialogContent>
 
       <DialogActions>

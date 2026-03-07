@@ -79,7 +79,7 @@ func (h *PostHandler) GetPostsByTopic(c *gin.Context) {
         postResponses = append(postResponses, h.buildPostResponse(post, currentUserID))
     }
        if posts == nil {
-        posts = []models.Post{} // Empty array instead of nil
+        posts = []models.Post{} 
     }
 
     c.JSON(http.StatusOK, gin.H{
@@ -169,13 +169,6 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
         return
     }
 
-    // Add tags if provided
-    if len(req.Tags) > 0 {
-        if err := h.tagRepo.UpdatePostTags(post.ID.String(), req.Tags); err != nil {
-            fmt.Printf("Failed to add tags: %v\n", err)
-        }
-    }
-
     // Fetch the created post with relations
     post, _ = h.postRepo.FindByID(post.ID)
 
@@ -227,12 +220,6 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
         return
     }
 
-    // Update tags if provided
-    if req.Tags != nil {
-        if err := h.tagRepo.UpdatePostTags(post.ID.String(), req.Tags); err != nil {
-            fmt.Printf("Failed to update tags: %v\n", err)
-        }
-    }
 
     // Fetch updated post with relations
     post, _ = h.postRepo.FindByID(post.ID)
@@ -293,7 +280,6 @@ func (h *PostHandler) TogglePin(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{"message": "post pin toggled successfully"})
 }
 
-// ToggleLock locks or unlocks a post (admin/moderator only)
 func (h *PostHandler) ToggleLock(c *gin.Context) {
     id, err := uuid.Parse(c.Param("id"))
     if err != nil {

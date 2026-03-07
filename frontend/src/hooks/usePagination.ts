@@ -34,6 +34,6 @@ export const usePagination = <T>(items: T[], pageSize: number = 10) => {
     goToPage,
     nextPage,
     prevPage,
-    setPageSize: () => {}, // Implement if needed
+    setPageSize: () => {}, 
   };
 };

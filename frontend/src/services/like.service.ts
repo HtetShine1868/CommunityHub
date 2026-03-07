@@ -16,7 +16,7 @@ export const likeService = {
       const response = await api.get(`/posts/${postId}/like-info`);
       return response.data;
     } catch (error) {
-      // If endpoint doesn't exist, return default values
+
       return { liked: false, count: 0 };
     }
   },

@@ -17,7 +17,6 @@ func NewCommentRepository(db *gorm.DB) *CommentRepository {
     return &CommentRepository{db: db}
 }
 
-// GetDB returns the database instance for direct queries
 func (r *CommentRepository) GetDB() *gorm.DB {
     return r.db
 }
@@ -38,7 +37,6 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
     var comments []models.Comment
     var total int64
 
-    // First check if post exists or handle empty case gracefully
     db := r.db.Model(&models.Comment{}).Where("post_id = ? AND parent_id IS NULL", postID)
     
     err := db.Count(&total).Error
@@ -47,7 +45,6 @@ func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]
         return nil, 0, err
     }
 
-    // If no comments, return empty array (not error)
     if total == 0 {
         return []models.Comment{}, 0, nil
     }
@@ -149,8 +146,6 @@ func (r *CommentRepository) Update(comment *models.Comment) error {
     }
     
     comment.UpdatedAt = time.Now()
-    
-    // Use Updates to only change specific fields
     result := r.db.Model(&models.Comment{}).Where("id = ?", comment.ID).Updates(map[string]interface{}{
         "content":      comment.Content,
         "is_pinned":    comment.IsPinned,
@@ -183,8 +178,7 @@ func (r *CommentRepository) TogglePin(id uuid.UUID) (bool, error) {
     
     // Toggle the value
     newPinStatus := !comment.IsPinned
-    
-    // Update with raw SQL to avoid any issues
+
     result := r.db.Exec("UPDATE comments SET is_pinned = ?, updated_at = ? WHERE id = ?", 
         newPinStatus, time.Now(), id)
     

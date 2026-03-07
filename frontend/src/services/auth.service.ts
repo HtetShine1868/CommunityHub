@@ -3,21 +3,21 @@ import { LoginCredentials, RegisterCredentials, AuthResponse, User } from '../ty
 
 export const authService = {
   async register(data: RegisterCredentials): Promise<AuthResponse> {
-    console.log('📝 Registering user:', data.email);
+    console.log('Registering user:', data.email);
     const response = await api.post('/auth/register', data);
-    console.log('✅ Registration successful');
+    console.log('Registration successful');
     return response.data;
   },
 
   async login(data: LoginCredentials): Promise<AuthResponse> {
-    console.log('🔐 Logging in user:', data.email);
+    console.log('Logging in user:', data.email);
     const response = await api.post('/auth/login', data);
-    console.log('✅ Login successful');
+    console.log('Login successful');
     return response.data;
   },
 
   async logout(): Promise<void> {
-    console.log('👋 Logging out...');
+    console.log('Logging out...');
     try {
       await api.post('/auth/logout');
     } finally {

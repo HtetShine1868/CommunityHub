@@ -56,10 +56,9 @@ const PostCard: React.FC<PostCardProps> = ({
   const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
   const isTopicCreator = user?.id === topicCreatorId; // Check if user is topic creator
   
-  // Pin permission: ONLY topic creator or admin
   const canPin = isTopicCreator || isAdmin;
   
-  // Edit/Delete permissions: post author or admin
+  // Edit/Delete permissions: post author 
   const canEdit = isAuthor || isAdmin;
   const canDelete = isAuthor || isAdmin;
 
@@ -169,21 +168,21 @@ const PostCard: React.FC<PostCardProps> = ({
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
               >
-                {/* Edit option - for post author or admin */}
+                {/* Edit option - for post author */}
                 {canEdit && (
                   <MenuItem onClick={handleEdit}>
                     <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
                   </MenuItem>
                 )}
                 
-                {/* Delete option - for post author or admin */}
+                {/* Delete option - for post author*/}
                 {canDelete && (
                   <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
                     <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
                   </MenuItem>
                 )}
                 
-                {/* Pin option - ONLY for topic creator or admin */}
+                {/* Pin option - ONLY for topic creator */}
                 {canPin && (
                   <MenuItem onClick={handlePin}>
                     <PushPin fontSize="small" sx={{ mr: 1 }} />
@@ -191,13 +190,6 @@ const PostCard: React.FC<PostCardProps> = ({
                   </MenuItem>
                 )}
                 
-                {/* Lock option - for admin only */}
-                {isAdmin && (
-                  <MenuItem onClick={handleLock}>
-                    <Lock fontSize="small" sx={{ mr: 1 }} />
-                    {post.isLocked ? 'Unlock' : 'Lock'}
-                  </MenuItem>
-                )}
               </Menu>
             </>
           )}

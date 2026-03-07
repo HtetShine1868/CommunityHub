@@ -40,7 +40,6 @@ func main() {
     postRepo := repository.NewPostRepository(db)
     commentRepo := repository.NewCommentRepository(db)
     likeRepo := repository.NewLikeRepository(db)
-    tagRepo := repository.NewTagRepository(db)
     categoryRepo := repository.NewCategoryRepository(db)
 
     authHandler := handlers.NewAuthHandler(userRepo)
@@ -60,7 +59,6 @@ func main() {
         frontendURL = "https://communityhub-1-ucxs.onrender.com"
     }
 
-    // Build allowed origins list
     allowedOrigins := []string{
         "http://localhost:3000",
         "http://localhost:5173",

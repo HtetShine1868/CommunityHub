@@ -7,7 +7,7 @@ console.log('🚀 API URL:', API_URL);
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // For cookies
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,7 +22,6 @@ if (authToken) {
   api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
 }
 
-// Function to set token
 export const setAuthToken = (token: string | null) => {
   authToken = token;
   if (token) {
@@ -59,9 +58,8 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response ${response.status}:`, response.config.url);
-    
-    // Check for token in response body (from login/register)
+    console.log(`Response ${response.status}:`, response.config.url);
+
     if (response.data?.token) {
       console.log('🔑 Token received from server');
       setAuthToken(response.data.token);
@@ -71,22 +69,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      console.error(`❌ Error ${error.response.status}:`, error.response.data);
-      
-      // Handle 401 Unauthorized
+      console.error(` Error ${error.response.status}:`, error.response.data);
+
       if (error.response.status === 401) {
-        console.log('🚫 Unauthorized - clearing token');
+        console.log('Unauthorized - clearing token');
         setAuthToken(null);
-        
-        // Only redirect if not already on login page
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
       }
     } else if (error.request) {
-      console.error('❌ No response from server');
+      console.error(' No response from server');
     } else {
-      console.error('❌ Request error:', error.message);
+      console.error(' Request error:', error.message);
     }
     return Promise.reject(error);
   }

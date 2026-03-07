@@ -55,50 +55,43 @@ func (h *CommentHandler) GetCommentsByPost(c *gin.Context) {
 func (h *CommentHandler) CreateComment(c *gin.Context) {
     // Log the incoming request
     fmt.Println("\n=== CreateComment called ===")
-    
-    // 1. Parse post ID
+
     postID, err := uuid.Parse(c.Param("id"))
     if err != nil {
-        fmt.Printf("❌ Invalid post ID format: %v\n", err)
+        fmt.Printf("Invalid post ID format: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
         return
     }
-    fmt.Printf("✅ Post ID: %s\n", postID)
 
-    // 2. Verify post exists
     post, err := h.postRepo.FindByID(postID)
     if err != nil {
-        fmt.Printf("❌ Post not found: %v\n", err)
+        fmt.Printf("Post not found: %v\n", err)
         c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
         return
     }
-    fmt.Printf("✅ Post found: %s (locked: %v)\n", post.ID, post.IsLocked)
+    fmt.Printf("Post found: %s (locked: %v)\n", post.ID, post.IsLocked)
 
-    // 3. Check if post is locked
     if post.IsLocked {
-        fmt.Println("❌ Post is locked")
+        fmt.Println("Post is locked")
         c.JSON(http.StatusForbidden, gin.H{"error": "this post is locked - no new comments allowed"})
         return
     }
 
-    // 4. Parse request body
     var req struct {
         Content  string     `json:"content" binding:"required"`
         ParentID *uuid.UUID `json:"parentId"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
-        fmt.Printf("❌ Invalid request body: %v\n", err)
+        fmt.Printf("Invalid request body: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    fmt.Printf("✅ Request content length: %d, ParentID: %v\n", len(req.Content), req.ParentID)
-
-    // 5. Get user ID from context
+ 
     userIDStr := c.GetString("userID")
     if userIDStr == "" {
-        fmt.Println("❌ User ID not found in context")
-        // Check all context keys for debugging
+        fmt.Println("User ID not found in context")
+
         fmt.Println("Context keys:")
         for _, key := range []string{"userID", "username", "email", "role"} {
             val, exists := c.Get(key)
@@ -107,18 +100,14 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
         return
     }
-    fmt.Printf("✅ User ID string: %s\n", userIDStr)
 
-    // 6. Parse user ID
     userID, err := uuid.Parse(userIDStr)
     if err != nil {
-        fmt.Printf("❌ Invalid user ID format: %v\n", err)
+        fmt.Printf("Invalid user ID format: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
         return
     }
-    fmt.Printf("✅ Parsed User ID: %s\n", userID)
 
-    // 7. Create comment object
     comment := &models.Comment{
         ID:        uuid.New(),
         Content:   req.Content,
@@ -130,14 +119,11 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
     }
-    fmt.Printf("✅ Comment object created: ID=%s, UserID=%s, PostID=%s\n", 
+    fmt.Printf("Comment object created: ID=%s, UserID=%s, PostID=%s\n", 
         comment.ID, comment.UserID, comment.PostID)
 
-// 8. Save to database
-fmt.Println("Attempting to save to database...")
 if err := h.commentRepo.Create(comment); err != nil {
-    fmt.Printf("❌ Database error: %v\n", err)
-    // Check for specific database errors using strings.Contains
+ 
     if strings.Contains(err.Error(), "foreign key constraint") {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user or post reference"})
     } else if strings.Contains(err.Error(), "duplicate key") {
@@ -148,18 +134,15 @@ if err := h.commentRepo.Create(comment); err != nil {
     return
 }
 
-    // 9. Fetch the created comment with user data
-    fmt.Println("Fetching created comment...")
     created, err := h.commentRepo.FindByID(comment.ID)
     if err != nil {
-        fmt.Printf("❌ Failed to fetch created comment: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{
             "error": "comment created but failed to fetch",
             "comment_id": comment.ID,
         })
         return
     }
-    fmt.Printf("✅ Comment fetched successfully: ID=%s, User=%s\n", 
+    fmt.Printf("Comment fetched successfully: ID=%s, User=%s\n", 
         created.ID, created.User.Username)
 
     c.JSON(http.StatusCreated, created)
@@ -168,55 +151,44 @@ if err := h.commentRepo.Create(comment); err != nil {
 // UpdateComment - Update a comment
 func (h *CommentHandler) UpdateComment(c *gin.Context) {
     fmt.Println("\n========== UPDATE COMMENT DEBUG ==========")
-    
-    // 1. Parse comment ID
+
     id, err := uuid.Parse(c.Param("id"))
     if err != nil {
-        fmt.Printf("❌ Invalid comment ID: %v\n", err)
+        fmt.Printf("Invalid comment ID: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid comment id"})
         return
     }
-    fmt.Printf("📌 Comment ID: %s\n", id)
+    fmt.Printf("Comment ID: %s\n", id)
 
-    // 2. Parse request body
     var req struct {
         Content string `json:"content" binding:"required"`
     }
 
     if err := c.ShouldBindJSON(&req); err != nil {
-        fmt.Printf("❌ Invalid request body: %v\n", err)
+        fmt.Printf("Invalid request body: %v\n", err)
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    fmt.Printf("📝 Request content: %q (length: %d)\n", req.Content, len(req.Content))
 
-    // 3. Get user info from context
     userID := c.GetString("userID")
     role := c.GetString("role")
     fmt.Printf("👤 UserID: %s, Role: %s\n", userID, role)
-
-    // 4. Fetch the comment BEFORE update
     comment, err := h.commentRepo.FindByID(id)
     if err != nil {
-        fmt.Printf("❌ Comment not found: %v\n", err)
+        fmt.Printf("Comment not found: %v\n", err)
         c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
         return
     }
-    fmt.Printf("✅ Found comment - BEFORE update:\n")
+    fmt.Printf("Found comment - BEFORE update:\n")
     fmt.Printf("   - ID: %s\n", comment.ID)
     fmt.Printf("   - Content: %q\n", comment.Content)
     fmt.Printf("   - Author ID: %s\n", comment.UserID.String())
     fmt.Printf("   - IsEdited: %v\n", comment.IsEdited)
-
-    // 5. Check ownership
     if comment.UserID.String() != userID && role != "admin" && role != "moderator" {
-        fmt.Printf("❌ Permission denied - User %s cannot edit comment by %s\n", userID, comment.UserID.String())
+        fmt.Printf("ermission denied - User %s cannot edit comment by %s\n", userID, comment.UserID.String())
         c.JSON(http.StatusForbidden, gin.H{"error": "you don't have permission to update this comment"})
         return
     }
-    fmt.Println("✅ Permission granted")
-
-    // 6. Update the comment
     oldContent := comment.Content
     comment.Content = req.Content
     comment.IsEdited = true
@@ -224,35 +196,26 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
     comment.EditedAt = &now
     comment.UpdatedAt = now
 
-    fmt.Printf("🔄 Updating content: %q -> %q\n", oldContent, comment.Content)
-    fmt.Printf("   IsEdited set to: %v\n", comment.IsEdited)
-    fmt.Printf("   EditedAt set to: %v\n", comment.EditedAt)
-    fmt.Printf("   UpdatedAt set to: %v\n", comment.UpdatedAt)
-
-    // 7. Log the update map that will be sent to database
+   
     updateMap := map[string]interface{}{
         "content":    comment.Content,
         "is_edited":  comment.IsEdited,
         "edited_at":  comment.EditedAt,
         "updated_at": comment.UpdatedAt,
     }
-    fmt.Printf("📦 Update map: %+v\n", updateMap)
+    fmt.Println("Saving to database...")
 
-    fmt.Println("💾 Saving to database...")
 
-    // 8. Save to database
     if err := h.commentRepo.Update(comment); err != nil {
-        fmt.Printf("❌ Database error: %v\n", err)
+        fmt.Printf("Database error: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment"})
         return
     }
-    fmt.Println("✅ Database update successful")
+    fmt.Println("Database update successful")
 
-    // 9. Fetch the updated comment to verify
     updated, err := h.commentRepo.FindByID(id)
     if err != nil {
-        fmt.Printf("⚠️ Warning: Could not fetch updated comment: %v\n", err)
-        // Return the comment we have even if fetch fails
+        fmt.Printf("Warning: Could not fetch updated comment: %v\n", err)
         c.JSON(http.StatusOK, comment)
         return
     }
@@ -263,11 +226,11 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
     fmt.Printf("   - IsEdited: %v\n", updated.IsEdited)
     
     if updated.Content == oldContent {
-        fmt.Println("⚠️ WARNING: Content did not change in database!")
+        fmt.Println("WARNING: Content did not change in database!")
     } else if updated.Content == id.String() {
-        fmt.Println("⚠️ WARNING: Content was set to the comment ID!")
+        fmt.Println("WARNING: Content was set to the comment ID!")
     } else {
-        fmt.Println("✅ Content updated successfully!")
+        fmt.Println("Content updated successfully!")
     }
     
     fmt.Println("==========================================\n")

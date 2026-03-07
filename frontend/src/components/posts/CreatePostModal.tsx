@@ -193,53 +193,6 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
           }}
           placeholder="Write your post content here..."
         />
-
-        {/* Tags Section */}
-        <Box sx={{ mt: 2 }}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Add Tags"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={loading}
-              placeholder="Type and press Enter"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <TagIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button 
-              variant="outlined" 
-              onClick={handleAddTag}
-              disabled={!tagInput.trim() || loading}
-              sx={{ minWidth: 80 }}
-            >
-              Add
-            </Button>
-          </Box>
-          
-          {formData.tags.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-              {formData.tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  onDelete={() => handleRemoveTag(tag)}
-                  size="small"
-                  disabled={loading}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 0 }}>

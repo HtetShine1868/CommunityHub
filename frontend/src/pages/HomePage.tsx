@@ -78,7 +78,6 @@ const HomePage: React.FC = () => {
         // Fetch trending topics (most active)
         setTopicsLoading(true);
         const topics = await topicService.getAllTopics();
-        // Sort by post count (mock for now - you can implement backend sorting later)
         const sorted = topics.sort((a, b) => (b.postCount || 0) - (a.postCount || 0)).slice(0, 4);
         setTrendingTopics(sorted);
       } catch (error) {
@@ -91,7 +90,6 @@ const HomePage: React.FC = () => {
     fetchHomeData();
   }, []);
 
-  // Hero Section Component
   const HeroSection = () => (
     <Paper
       elevation={0}

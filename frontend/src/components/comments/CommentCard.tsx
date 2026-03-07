@@ -26,13 +26,14 @@ import { useAuthStore } from '../../store/authStore';
 
 interface CommentCardProps {
   comment: Comment;
-  onLike: () => void;
-  onReply: (content: string) => void;
-  onDelete: () => void;
-  onEdit: (content: string) => void;
-  onPin?: () => void;
+  onLike: (commentId: string) => void;
+  onReply: (commentId: string, content: string) => void;
+  onDelete: (commentId: string) => void;
+  onEdit: (commentId: string, content: string) => void;
+  onPin?: (commentId: string) => void;
   currentUserId?: string;
   isPostAuthor?: boolean;
+  level?: number; // Track nesting level
 }
 
 const CommentCard: React.FC<CommentCardProps> = ({
@@ -44,6 +45,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
   onPin,
   currentUserId,
   isPostAuthor = false,
+  level = 0,
 }) => {
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -74,14 +76,16 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleSaveEdit = () => {
     if (editContent.trim()) {
-      onEdit(editContent);
+      // Pass the comment ID to identify which comment to edit
+      onEdit(comment.id, editContent);
       setIsEditing(false);
     }
   };
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
-      onReply(replyContent);
+      // Pass the comment ID to identify which comment to reply to
+      onReply(comment.id, replyContent);
       setReplyContent('');
       setShowReply(false);
     }
@@ -89,16 +93,21 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handlePin = () => {
     if (onPin) {
-      onPin();
+      onPin(comment.id);
     }
     handleMenuClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
-      onDelete();
+      // Pass the comment ID to identify which comment to delete
+      onDelete(comment.id);
     }
     handleMenuClose();
+  };
+
+  const handleLike = () => {
+    onLike(comment.id);
   };
 
   const getUserInitial = () => {
@@ -117,7 +126,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
       sx={{
         p: 2,
         mb: 2,
-        ml: comment.parentId ? 4 : 0,
+        ml: level * 4, // Indent based on nesting level
         borderLeft: comment.isPinned ? '4px solid' : 'none',
         borderLeftColor: 'primary.main',
         bgcolor: comment.isPinned ? 'primary.light' : 'background.paper',
@@ -255,7 +264,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <IconButton
           size="small"
-          onClick={onLike}
+          onClick={handleLike}
           sx={{
             color: comment.liked ? 'error.main' : 'inherit',
           }}
@@ -314,7 +323,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Box>
       )}
 
-      {/* Nested Replies */}
+      {/* Nested Replies - Pass level + 1 for indentation */}
       {comment.replies && comment.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           {comment.replies.map((reply) => (
@@ -328,6 +337,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
               onPin={onPin}
               currentUserId={currentUserId}
               isPostAuthor={isPostAuthor}
+              level={level + 1} // Increment level for nesting
             />
           ))}
         </Box>

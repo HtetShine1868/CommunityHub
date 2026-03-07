@@ -38,14 +38,26 @@ export const useComments = (postId: string) => {
       const newComment = await commentService.createComment(postId, data);
       
       if (data.parentId) {
-        // Add reply to parent comment
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === data.parentId
-              ? { ...c, replies: [...(c.replies || []), newComment] }
-              : c
-          )
-        );
+        // Add reply to parent comment - find the correct parent by ID
+        const updateReplies = (commentsList: Comment[]): Comment[] => {
+          return commentsList.map((c) => {
+            if (c.id === data.parentId) {
+              return {
+                ...c,
+                replies: [...(c.replies || []), newComment]
+              };
+            }
+            if (c.replies) {
+              return {
+                ...c,
+                replies: updateReplies(c.replies)
+              };
+            }
+            return c;
+          });
+        };
+        
+        setComments(updateReplies(comments));
       } else {
         setComments((prev) => [...prev, newComment]);
       }
@@ -68,9 +80,12 @@ export const useComments = (postId: string) => {
     try {
       const updated = await commentService.updateComment(id, data);
       
+      // Update the specific comment by ID, whether it's a top-level comment or reply
       const updateInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map((c) => {
-          if (c.id === id) return { ...c, ...updated, isEdited: true };
+          if (c.id === id) {
+            return { ...c, ...updated, isEdited: true };
+          }
           if (c.replies) {
             return { ...c, replies: updateInTree(c.replies) };
           }
@@ -97,12 +112,13 @@ export const useComments = (postId: string) => {
     try {
       await commentService.deleteComment(id);
       
+      // Delete the specific comment by ID, whether it's top-level or reply
       const removeFromTree = (commentsList: Comment[]): Comment[] => {
         return commentsList
-          .filter((c) => c.id !== id)
+          .filter((c) => c.id !== id) // Remove the comment if it matches
           .map((c) => ({
             ...c,
-            replies: c.replies ? removeFromTree(c.replies) : [],
+            replies: c.replies ? removeFromTree(c.replies) : [], // Check replies recursively
           }));
       };
       

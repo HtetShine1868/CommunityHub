@@ -14,6 +14,8 @@ import {
   Home as HomeIcon,
   Brightness4,
   Brightness7,
+  Login as LoginIcon,
+  PersonAdd as RegisterIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useThemeStore } from '../../store/themeStore';
@@ -67,6 +69,44 @@ const AuthNavbar: React.FC = () => {
           >
             <HomeIcon />
           </IconButton>
+
+          {/* Login Button */}
+          <Button
+            variant="outlined"
+            startIcon={<LoginIcon />}
+            onClick={() => navigate('/login')}
+            sx={{
+              mr: 1,
+              borderRadius: 2,
+              textTransform: 'none',
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              '&:hover': {
+                borderColor: theme.palette.primary.dark,
+                backgroundColor: alpha(theme.palette.primary.main, 0.04),
+              },
+            }}
+          >
+            Login
+          </Button>
+
+          {/* Register Button */}
+          <Button
+            variant="contained"
+            startIcon={<RegisterIcon />}
+            onClick={() => navigate('/register')}
+            sx={{
+              mr: 1,
+              borderRadius: 2,
+              textTransform: 'none',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+              '&:hover': {
+                background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
+              },
+            }}
+          >
+            Register
+          </Button>
 
           {/* Theme Toggle */}
           <IconButton onClick={toggleTheme}>

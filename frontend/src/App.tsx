@@ -9,9 +9,9 @@ import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/authStore';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Navbar from './components/common/Navbar';
-import AuthNavbar from './components/common/AuthNavbar'; // Add this import
+import AuthNavbar from './components/common/AuthNavbar';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import LandingPage from './pages/LandingPage'; // Add this import
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import TopicsPage from './pages/TopicsPage';
 import TopicDetailPage from './pages/TopicDetailPage';
@@ -25,7 +25,7 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 function App() {
   const { mode } = useThemeStore();
   const theme = mode === 'light' ? lightTheme : darkTheme;
-  const { checkAuth, isLoading } = useAuthStore();
+  const { checkAuth, isLoading, isAuthenticated } = useAuthStore();
 
   // Check authentication on app start
   useEffect(() => {
@@ -52,10 +52,14 @@ function App() {
             <Route
               path="/"
               element={
-                <>
-                  <AuthNavbar />
-                  <LandingPage />
-                </>
+                isAuthenticated ? (
+                  <Navigate to="/home" replace />
+                ) : (
+                  <>
+                    <AuthNavbar />
+                    <LandingPage />
+                  </>
+                )
               }
             />
 
@@ -63,19 +67,27 @@ function App() {
             <Route
               path="/login"
               element={
-                <>
-                  <AuthNavbar />
-                  <LoginPage />
-                </>
+                isAuthenticated ? (
+                  <Navigate to="/home" replace />
+                ) : (
+                  <>
+                    <AuthNavbar />
+                    <LoginPage />
+                  </>
+                )
               }
             />
             <Route
               path="/register"
               element={
-                <>
-                  <AuthNavbar />
-                  <RegisterPage />
-                </>
+                isAuthenticated ? (
+                  <Navigate to="/home" replace />
+                ) : (
+                  <>
+                    <AuthNavbar />
+                    <RegisterPage />
+                  </>
+                )
               }
             />
             
@@ -146,8 +158,8 @@ function App() {
               />
             </Route>
             
-            {/* Catch all - redirect to landing */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Catch all - redirect to appropriate home */}
+            <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} replace />} />
           </Routes>
         </BrowserRouter>
         <ToastContainer position="top-right" autoClose={3000} theme={mode} />

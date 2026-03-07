@@ -10,6 +10,7 @@ import {
   IconButton,
   InputAdornment,
   useTheme,
+  alpha,
 } from '@mui/material';
 import {
   Visibility,
@@ -66,33 +67,24 @@ const LoginPage: React.FC = () => {
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-        py: 4,
+        background: theme.palette.mode === 'light' 
+          ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`
+          : `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.2)} 0%, ${alpha(theme.palette.secondary.dark, 0.2)} 100%)`,
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Decorative elements */}
+      {/* Animated background pattern */}
       <Box
         sx={{
           position: 'absolute',
-          top: -100,
-          right: -100,
-          width: 300,
-          height: 300,
-          borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.1)',
-        }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: -100,
-          left: -100,
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background: 'rgba(255, 255, 255, 0.1)',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `radial-gradient(${theme.palette.primary.main} 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+          opacity: 0.1,
         }}
       />
 
@@ -103,12 +95,13 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           <Paper
-            elevation={24}
+            elevation={theme.palette.mode === 'dark' ? 4 : 24}
             sx={{
               p: { xs: 3, sm: 4 },
               borderRadius: 4,
               backgroundColor: theme.palette.background.paper,
-              boxShadow: `0 20px 40px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.2)'}`,
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
             {/* Header */}
@@ -127,7 +120,7 @@ const LoginPage: React.FC = () => {
                 Welcome Back
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Sign in to continue
+                Sign in to continue your journey
               </Typography>
             </Box>
 
@@ -141,7 +134,6 @@ const LoginPage: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Email Field */}
               <TextField
                 {...register('email')}
                 fullWidth
@@ -156,45 +148,9 @@ const LoginPage: React.FC = () => {
                       <Email color={errors.email ? 'error' : 'primary'} />
                     </InputAdornment>
                   ),
-                  sx: {
-                    color: theme.palette.text.primary,
-                    backgroundColor: theme.palette.background.default,
-                    '& input': {
-                      color: theme.palette.text.primary,
-                      '&::placeholder': {
-                        color: theme.palette.text.secondary,
-                        opacity: 0.7,
-                      },
-                    },
-                  },
-                }}
-                InputLabelProps={{
-                  sx: {
-                    color: theme.palette.text.secondary,
-                    '&.Mui-focused': {
-                      color: theme.palette.primary.main,
-                    },
-                  },
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: theme.palette.background.default,
-                    borderRadius: 2,
-                    '& fieldset': {
-                      borderColor: theme.palette.divider,
-                    },
-                    '&:hover fieldset': {
-                      borderColor: theme.palette.primary.main,
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: theme.palette.primary.main,
-                      borderWidth: 2,
-                    },
-                  },
                 }}
               />
 
-              {/* Password Field */}
               <TextField
                 {...register('password')}
                 fullWidth
@@ -215,56 +171,14 @@ const LoginPage: React.FC = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         size="small"
-                        sx={{
-                          color: theme.palette.text.secondary,
-                          '&:hover': {
-                            color: theme.palette.primary.main,
-                          },
-                        }}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
-                  sx: {
-                    color: theme.palette.text.primary,
-                    backgroundColor: theme.palette.background.default,
-                    '& input': {
-                      color: theme.palette.text.primary,
-                      '&::placeholder': {
-                        color: theme.palette.text.secondary,
-                        opacity: 0.7,
-                      },
-                    },
-                  },
-                }}
-                InputLabelProps={{
-                  sx: {
-                    color: theme.palette.text.secondary,
-                    '&.Mui-focused': {
-                      color: theme.palette.primary.main,
-                    },
-                  },
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: theme.palette.background.default,
-                    borderRadius: 2,
-                    '& fieldset': {
-                      borderColor: theme.palette.divider,
-                    },
-                    '&:hover fieldset': {
-                      borderColor: theme.palette.primary.main,
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: theme.palette.primary.main,
-                      borderWidth: 2,
-                    },
-                  },
                 }}
               />
 
-              {/* Login Button */}
               <Button
                 type="submit"
                 fullWidth
@@ -279,17 +193,11 @@ const LoginPage: React.FC = () => {
                   textTransform: 'none',
                   fontSize: '1rem',
                   fontWeight: 600,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-                  color: '#fff',
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
-                  },
                 }}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
 
-              {/* Register Link */}
               <Box sx={{ textAlign: 'center', mt: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Don't have an account?{' '}

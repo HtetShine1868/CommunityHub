@@ -9,7 +9,9 @@ import { useThemeStore } from './store/themeStore';
 import { useAuthStore } from './store/authStore';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Navbar from './components/common/Navbar';
+import AuthNavbar from './components/common/AuthNavbar'; // Add this import
 import ProtectedRoute from './components/common/ProtectedRoute';
+import LandingPage from './pages/LandingPage'; // Add this import
 import HomePage from './pages/HomePage';
 import TopicsPage from './pages/TopicsPage';
 import TopicDetailPage from './pages/TopicDetailPage';
@@ -45,24 +47,106 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
-          <Navbar />
           <Routes>
-            {/* Public routes - NO AUTH REQUIRED */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            {/* Public Landing Page with AuthNavbar */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <AuthNavbar />
+                  <LandingPage />
+                </>
+              }
+            />
+
+            {/* Public Auth Routes with AuthNavbar */}
+            <Route
+              path="/login"
+              element={
+                <>
+                  <AuthNavbar />
+                  <LoginPage />
+                </>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <>
+                  <AuthNavbar />
+                  <RegisterPage />
+                </>
+              }
+            />
             
-            {/* ALL OTHER ROUTES - PROTECTED */}
+            {/* Protected Routes with Main Navbar */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/topics" element={<TopicsPage />} />
-              <Route path="/topics/:id" element={<TopicDetailPage />} />
-              <Route path="/posts/:id" element={<PostDetailPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/:userId" element={<ProfilePage />} />
-              <Route path="/search" element={<SearchPage />} />
+              <Route
+                path="/home"
+                element={
+                  <>
+                    <Navbar />
+                    <HomePage />
+                  </>
+                }
+              />
+              <Route
+                path="/topics"
+                element={
+                  <>
+                    <Navbar />
+                    <TopicsPage />
+                  </>
+                }
+              />
+              <Route
+                path="/topics/:id"
+                element={
+                  <>
+                    <Navbar />
+                    <TopicDetailPage />
+                  </>
+                }
+              />
+              <Route
+                path="/posts/:id"
+                element={
+                  <>
+                    <Navbar />
+                    <PostDetailPage />
+                  </>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <>
+                    <Navbar />
+                    <ProfilePage />
+                  </>
+                }
+              />
+              <Route
+                path="/profile/:userId"
+                element={
+                  <>
+                    <Navbar />
+                    <ProfilePage />
+                  </>
+                }
+              />
+              <Route
+                path="/search"
+                element={
+                  <>
+                    <Navbar />
+                    <SearchPage />
+                  </>
+                }
+              />
             </Route>
             
-            {/* Catch all - redirect to home */}
+            {/* Catch all - redirect to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

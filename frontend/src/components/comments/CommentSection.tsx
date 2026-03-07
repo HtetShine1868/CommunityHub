@@ -60,14 +60,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
     setSubmitting(true);
     try {
-      await commentService.createComment(postId, { content: newComment });
+      // ✅ Pass the actual text content, not an object
+      await commentService.createComment(postId, { 
+        content: newComment.trim() 
+      });
+      
       setNewComment('');
-      fetchComments();
+      await fetchComments(); // Refresh to show new comment
       addNotification({
         type: 'success',
         message: 'Comment posted!',
       });
     } catch (error) {
+      console.error('Failed to post comment:', error);
       setError('Failed to post comment');
       addNotification({
         type: 'error',
@@ -88,7 +93,35 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
     try {
       await likeService.toggleCommentLike(commentId);
-      fetchComments();
+      // Update local state instead of refetching all comments
+      setComments(prevComments => 
+        prevComments.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              liked: !comment.liked,
+              likeCount: comment.liked ? (comment.likeCount - 1) : (comment.likeCount + 1)
+            };
+          }
+          // Also check replies
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map(reply => {
+                if (reply.id === commentId) {
+                  return {
+                    ...reply,
+                    liked: !reply.liked,
+                    likeCount: reply.liked ? (reply.likeCount - 1) : (reply.likeCount + 1)
+                  };
+                }
+                return reply;
+              })
+            };
+          }
+          return comment;
+        })
+      );
     } catch (error) {
       addNotification({
         type: 'error',
@@ -98,9 +131,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleReply = async (commentId: string, content: string) => {
+    if (!content.trim()) return;
+    
     try {
-      await commentService.createComment(postId, { content, parentId: commentId });
-      fetchComments();
+      // ✅ Pass the actual text content
+      await commentService.createComment(postId, { 
+        content: content.trim(), 
+        parentId: commentId 
+      });
+      
+      await fetchComments(); // Refresh to show new reply
       addNotification({
         type: 'success',
         message: 'Reply posted!',
@@ -118,7 +158,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!window.confirm('Delete this comment?')) return;
     try {
       await commentService.deleteComment(commentId);
-      fetchComments();
+      // Update local state
+      setComments(prevComments => 
+        prevComments.filter(comment => {
+          if (comment.id === commentId) return false;
+          if (comment.replies) {
+            comment.replies = comment.replies.filter(reply => reply.id !== commentId);
+          }
+          return true;
+        })
+      );
       addNotification({
         type: 'success',
         message: 'Comment deleted',
@@ -133,9 +182,30 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleEdit = async (commentId: string, content: string) => {
+    if (!content.trim()) return;
+    
     try {
-      await commentService.updateComment(commentId, { content });
-      fetchComments();
+      await commentService.updateComment(commentId, { 
+        content: content.trim() 
+      });
+      
+      // Update local state
+      setComments(prevComments => 
+        prevComments.map(comment => {
+          if (comment.id === commentId) {
+            return { ...comment, content, isEdited: true };
+          }
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map(reply => 
+                reply.id === commentId ? { ...reply, content, isEdited: true } : reply
+              )
+            };
+          }
+          return comment;
+        })
+      );
       addNotification({
         type: 'success',
         message: 'Comment updated!',
@@ -152,7 +222,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const handlePin = async (commentId: string) => {
     if (onPinComment) {
       await onPinComment(commentId);
-      fetchComments();
+      await fetchComments();
     }
   };
 

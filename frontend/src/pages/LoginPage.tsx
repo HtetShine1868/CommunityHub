@@ -201,14 +201,35 @@ const LoginPage: React.FC = () => {
                       />
                     </InputAdornment>
                   ),
+                  sx: {
+                    color: theme.palette.text.primary, // Ensure text is visible
+                    '& input': {
+                      color: theme.palette.text.primary,
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: theme.palette.text.secondary,
+                    '&.Mui-focused': {
+                      color: theme.palette.primary.main,
+                    },
+                  },
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     transition: 'all 0.2s',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: 2,
+                    },
+                    '& fieldset': {
+                      borderColor: theme.palette.divider,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: theme.palette.primary.main,
                     },
                   },
                 }}
@@ -245,14 +266,35 @@ const LoginPage: React.FC = () => {
                       </IconButton>
                     </InputAdornment>
                   ),
+                  sx: {
+                    color: theme.palette.text.primary,
+                    '& input': {
+                      color: theme.palette.text.primary,
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: theme.palette.text.secondary,
+                    '&.Mui-focused': {
+                      color: theme.palette.primary.main,
+                    },
+                  },
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 2,
                     transition: 'all 0.2s',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: 2,
+                    },
+                    '& fieldset': {
+                      borderColor: theme.palette.divider,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: theme.palette.primary.main,
                     },
                   },
                 }}
@@ -282,7 +324,11 @@ const LoginPage: React.FC = () => {
                       }}
                     />
                   }
-                  label="Remember me"
+                  label={
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                      Remember me
+                    </Typography>
+                  }
                 />
                 <Link
                   href="#"
@@ -314,6 +360,7 @@ const LoginPage: React.FC = () => {
                   fontSize: '1rem',
                   fontWeight: 600,
                   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                  color: 'white',
                   '&:hover': {
                     background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
                   },

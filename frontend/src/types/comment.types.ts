@@ -3,7 +3,6 @@ import { User } from './user.types';
 export interface Comment {
   id: string;
   content: string;
-  contentHtml?: string;
   userId: string;
   postId: string;
   parentId?: string;

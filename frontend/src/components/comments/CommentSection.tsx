@@ -96,13 +96,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const handleReply = async (commentId: string, content: string) => {
     if (!content.trim()) return;
     
-    try {
-      // ✅ CRITICAL: Send ONLY the content string with parentId
-      const replyData = {
-        content: content.trim(),
-        parentId: commentId
-      };
-      
+   try {
+    // ✅ FIX: Use the content parameter, not the commentId
+    console.log('📝 Submitting reply - commentId:', commentId);
+    console.log('📝 Reply content:', content); // This should be the actual text
+    console.log('📤 Sending reply data:', {
+      content: content.trim(), // Use the content parameter!
+      parentId: commentId
+    });
+    
+    const replyData = {
+      content: content.trim(), // ✅ This is the actual reply text
+      parentId: commentId
+    }
       console.log('📝 Submitting reply - commentId:', commentId);
       console.log('📤 Sending reply data:', replyData);
       
@@ -130,7 +136,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!content.trim()) return;
     
     try {
-      // ✅ CRITICAL: Send ONLY the content string
+
       const editData = {
         content: content.trim()
       };
@@ -142,7 +148,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       
       console.log('✅ Comment updated:', updatedComment);
       
-      // Update local state optimistically
+
       const updateCommentInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map(c => {
           if (c.id === commentId) {

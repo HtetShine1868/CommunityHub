@@ -83,6 +83,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
+      console.log('💬 Reply content from input:', replyContent.trim());
       onReply(comment.id, replyContent.trim());
       setReplyContent('');
       setShowReply(false);

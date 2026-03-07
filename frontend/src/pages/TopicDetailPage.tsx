@@ -25,7 +25,6 @@ import {
   InputLabel,
   Select,
   SelectChangeEvent,
-  Drawer,
   Badge,
   Tooltip,
 } from '@mui/material';
@@ -35,7 +34,6 @@ import {
   Lock,
   Public,
   Forum,
-  People,
   Edit,
   Delete,
   MoreVert,
@@ -43,17 +41,14 @@ import {
   Search as SearchIcon,
   FilterList,
   Clear,
-  Sort,
   AccessTime,
   Whatshot,
   TrendingUp,
-  Close,
 } from '@mui/icons-material';
 import { useAuthStore } from '../store/authStore';
 import { topicService } from '../services/topic.service';
 import { postService } from '../services/post.service';
 import { likeService } from '../services/like.service';
-import { searchService } from '../services/search.service';
 import { Topic } from '../types/topic.types';
 import { Post } from '../types/post.types';
 import PostCard from '../components/posts/PostCard';
@@ -151,8 +146,7 @@ const TopicDetailPage: React.FC = () => {
     
     try {
       console.log('📥 Fetching posts for topic:', id);
-      // Fetch more posts to allow client-side filtering
-      const response = await postService.getPostsByTopic(id, 1, 100); // Get up to 100 posts
+      const response = await postService.getPostsByTopic(id, 1, 100);
       
       setPosts(response.data || []);
       setTotal(response.total || 0);
@@ -176,7 +170,6 @@ const TopicDetailPage: React.FC = () => {
 
     let filtered = [...posts];
 
-    // Apply search filter
     if (debouncedSearchQuery) {
       const query = debouncedSearchQuery.toLowerCase();
       filtered = filtered.filter(post => 
@@ -185,7 +178,6 @@ const TopicDetailPage: React.FC = () => {
       );
     }
 
-    // Apply time filter
     if (filters.timeFilter !== 'all') {
       const now = new Date();
       const filterDate = new Date();
@@ -208,7 +200,6 @@ const TopicDetailPage: React.FC = () => {
       filtered = filtered.filter(post => new Date(post.createdAt) >= filterDate);
     }
 
-    // Apply sorting
     switch (filters.sortBy) {
       case 'latest':
         filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -227,17 +218,15 @@ const TopicDetailPage: React.FC = () => {
     setFilteredPosts(filtered);
     setTotal(filtered.length);
     setTotalPages(Math.ceil(filtered.length / pageSize));
-    setPage(1); // Reset to first page when filters change
+    setPage(1);
   }, [posts, debouncedSearchQuery, filters]);
 
-  // Get current page of filtered posts
   const getCurrentPagePosts = () => {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     return filteredPosts.slice(start, end);
   };
 
-  // Initial data loading
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -248,7 +237,6 @@ const TopicDetailPage: React.FC = () => {
     loadData();
   }, [fetchTopic, fetchPosts]);
 
-  // Handle post like
   const handleLike = async (postId: string) => {
     if (!isAuthenticated) {
       addNotification({
@@ -276,7 +264,6 @@ const TopicDetailPage: React.FC = () => {
     }
   };
 
-  // Handle post edit
   const handleEditPost = (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (post) {
@@ -286,7 +273,6 @@ const TopicDetailPage: React.FC = () => {
     handleMenuClose();
   };
 
-  // Handle post delete
   const handleDeletePost = async (postId: string) => {
     if (!window.confirm('Are you sure you want to delete this post?')) {
       return;
@@ -309,14 +295,12 @@ const TopicDetailPage: React.FC = () => {
     handleMenuClose();
   };
 
-  // Handle topic edit
   const handleEditTopic = () => {
     console.log('📝 Opening edit modal for topic:', topic);
     setEditTopicModalOpen(true);
     handleMenuClose();
   };
 
-  // Handle topic delete
   const handleDeleteTopic = async () => {
     if (!window.confirm('Are you sure you want to delete this topic? All posts will be lost!')) {
       return;
@@ -340,7 +324,6 @@ const TopicDetailPage: React.FC = () => {
     handleMenuClose();
   };
 
-  // Handle share
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     addNotification({
@@ -350,7 +333,6 @@ const TopicDetailPage: React.FC = () => {
     handleMenuClose();
   };
 
-  // Handle topic update success
   const handleTopicUpdated = async () => {
     console.log('🔄 Topic updated callback triggered');
     try {
@@ -370,7 +352,6 @@ const TopicDetailPage: React.FC = () => {
     }
   };
 
-  // Handle post creation success
   const handlePostCreated = (newPost: Post) => {
     console.log('📝 Post created, refreshing posts...');
     setPosts(prev => [newPost, ...prev]);
@@ -381,7 +362,6 @@ const TopicDetailPage: React.FC = () => {
     });
   };
 
-  // Handle post update success
   const handlePostUpdated = () => {
     console.log('📝 Post updated, refreshing posts...');
     fetchPosts();
@@ -389,7 +369,6 @@ const TopicDetailPage: React.FC = () => {
     setSelectedPost(null);
   };
 
-  // Filter handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
@@ -411,7 +390,6 @@ const TopicDetailPage: React.FC = () => {
     setSearchQuery('');
   };
 
-  // Menu handlers
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -420,18 +398,15 @@ const TopicDetailPage: React.FC = () => {
     setAnchorEl(null);
   };
 
-  // Handle page change
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Loading state
   if (loading) {
     return <LoadingSpinner message="Loading topic..." />;
   }
 
-  // Error state
   if (error || !topic) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
@@ -456,7 +431,7 @@ const TopicDetailPage: React.FC = () => {
         <MuiLink
           component="button"
           variant="body1"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/home')}
           sx={{ cursor: 'pointer', textDecoration: 'none' }}
         >
           Home
@@ -516,7 +491,10 @@ const TopicDetailPage: React.FC = () => {
               horizontal: 'right',
             }}
           >
-           
+            <MenuItem onClick={handleShare}>
+              <Share />
+              <Box component="span" sx={{ ml: 1 }}>Share</Box>
+            </MenuItem>
             {canEdit && (
               [
                 <Divider key="divider" />,
@@ -555,9 +533,7 @@ const TopicDetailPage: React.FC = () => {
             {topic.title}
           </Typography>
           
-          {/* Chips container */}
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* Category Chip */}
             {topic.category && (
               <Chip
                 icon={<span>{topic.category.icon || '📁'}</span>}
@@ -572,7 +548,6 @@ const TopicDetailPage: React.FC = () => {
               />
             )}
             
-            {/* Privacy Chip */}
             <Chip
               icon={topic.isPrivate ? <Lock /> : <Public />}
               label={topic.isPrivate ? 'Private Topic' : 'Public Topic'}
@@ -583,7 +558,6 @@ const TopicDetailPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Topic description */}
         {topic.description && (
           <Typography 
             variant="body1" 
@@ -598,7 +572,6 @@ const TopicDetailPage: React.FC = () => {
           </Typography>
         )}
 
-        {/* Topic metadata */}
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', sm: 'row' },
@@ -624,7 +597,6 @@ const TopicDetailPage: React.FC = () => {
       {/* Search & Filter Section */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Search Bar */}
           <TextField
             fullWidth
             placeholder="Search posts in this topic..."
@@ -649,7 +621,6 @@ const TopicDetailPage: React.FC = () => {
             }}
           />
           
-          {/* Filter Button with Badge */}
           <Tooltip title="Filter posts">
             <Badge badgeContent={activeFilterCount} color="primary">
               <Button
@@ -663,7 +634,6 @@ const TopicDetailPage: React.FC = () => {
             </Badge>
           </Tooltip>
 
-          {/* Reset Filters Button (visible when filters active) */}
           {activeFilterCount > 0 && (
             <Button
               variant="text"
@@ -676,7 +646,6 @@ const TopicDetailPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Filter Panel */}
         {showFilters && (
           <Box sx={{ 
             mt: 3, 
@@ -740,6 +709,34 @@ const TopicDetailPage: React.FC = () => {
           </Box>
         )}
       </Paper>
+
+      {/* Posts Section Header - FIXED: Added New Post Button */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        gap: 2,
+        mb: 3 
+      }}>
+        <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
+          Posts {total > 0 && `(${total})`}
+        </Typography>
+        
+        {/* New Post Button - Always visible when user can create posts */}
+        {canCreatePost && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setCreatePostModalOpen(true)}
+            fullWidth={isMobile}
+          >
+            New Post
+          </Button>
+        )}
+      </Box>
+
+      <Divider sx={{ mb: 3 }} />
 
       {/* Results Info */}
       <Box sx={{ 

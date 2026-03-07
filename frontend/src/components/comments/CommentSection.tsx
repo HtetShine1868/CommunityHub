@@ -60,20 +60,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
     setSubmitting(true);
     try {
-      // ✅ CRITICAL: Send ONLY the content string, not wrapped in an object
-      // The commentService expects { content: string }
+      console.log('📝 Submitting comment - raw input:', newComment);
+      
       const commentData = {
         content: newComment.trim()
       };
       
-      console.log('📝 Submitting comment - raw input:', newComment);
       console.log('📤 Sending data:', commentData);
       
       const createdComment = await commentService.createComment(postId, commentData);
       
       console.log('✅ Server response:', createdComment);
       
-      // Clear input and refresh
       setNewComment('');
       await fetchComments();
       
@@ -94,23 +92,23 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleReply = async (commentId: string, content: string) => {
-    if (!content.trim()) return;
+    console.log('📝 handleReply received:', { commentId, content });
     
-   try {
-    // ✅ FIX: Use the content parameter, not the commentId
-    console.log('📝 Submitting reply - commentId:', commentId);
-    console.log('📝 Reply content:', content); // This should be the actual text
-    console.log('📤 Sending reply data:', {
-      content: content.trim(), // Use the content parameter!
-      parentId: commentId
-    });
-    
-    const replyData = {
-      content: content.trim(), // ✅ This is the actual reply text
-      parentId: commentId
+    if (!content || !content.trim()) {
+      console.log('❌ Empty content, returning');
+      return;
     }
-      console.log('📝 Submitting reply - commentId:', commentId);
-      console.log('📤 Sending reply data:', replyData);
+    
+    try {
+      console.log('📤 Sending reply data:', {
+        content: content.trim(),
+        parentId: commentId
+      });
+      
+      const replyData = {
+        content: content.trim(),
+        parentId: commentId
+      };
       
       const createdReply = await commentService.createComment(postId, replyData);
       
@@ -133,22 +131,24 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const handleEdit = async (commentId: string, content: string) => {
+    console.log('📝 handleEdit received:', { commentId, content });
+    
     if (!content.trim()) return;
     
     try {
-
+      console.log('📤 Sending edit data:', {
+        content: content.trim()
+      });
+      
       const editData = {
         content: content.trim()
       };
-      
-      console.log('📝 Editing comment:', commentId);
-      console.log('📤 Sending edit data:', editData);
       
       const updatedComment = await commentService.updateComment(commentId, editData);
       
       console.log('✅ Comment updated:', updatedComment);
       
-
+      // Update local state optimistically
       const updateCommentInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map(c => {
           if (c.id === commentId) {
@@ -187,7 +187,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       
       console.log('✅ Comment deleted');
       
-      // Update local state optimistically
+      // Update local state
       const removeCommentFromTree = (commentsList: Comment[]): Comment[] => {
         return commentsList
           .filter(c => c.id !== commentId)
@@ -225,7 +225,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     try {
       await likeService.toggleCommentLike(commentId);
       
-      // Optimistic update
+      // Update local state optimistically
       const updateLikeInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map(c => {
           if (c.id === commentId) {
@@ -313,11 +313,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           <CommentCard
             key={comment.id}
             comment={comment}
-            onLike={() => handleLike(comment.id)}
-            onReply={(content) => handleReply(comment.id, content)}
-            onDelete={() => handleDelete(comment.id)}
-            onEdit={(content) => handleEdit(comment.id, content)}
-            onPin={() => handlePin(comment.id)}
+            onLike={handleLike}
+            onReply={handleReply}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onPin={handlePin}
             currentUserId={user?.id}
             isPostAuthor={isPostAuthor}
           />

@@ -76,15 +76,19 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleSaveEdit = () => {
     if (editContent.trim()) {
+      console.log('💬 Saving edit - content:', editContent.trim());
       onEdit(comment.id, editContent.trim());
       setIsEditing(false);
     }
   };
 
   const handleReplySubmit = () => {
-      console.log('🔍 Reply input type:', typeof replyContent);
     if (replyContent.trim()) {
       console.log('💬 Reply content from input:', replyContent.trim());
+      console.log('💬 Calling onReply with:', {
+        commentId: comment.id,
+        content: replyContent.trim()
+      });
       onReply(comment.id, replyContent.trim());
       setReplyContent('');
       setShowReply(false);
@@ -135,6 +139,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         },
       }}
     >
+      {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar
@@ -181,6 +186,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
           </Box>
         </Box>
 
+        {/* Menu Button */}
         {(canEdit || canPin) && (
           <>
             <IconButton size="small" onClick={handleMenuOpen}>
@@ -212,6 +218,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         )}
       </Box>
 
+      {/* Content Section */}
       {isEditing ? (
         <Box sx={{ mt: 1 }}>
           <TextField
@@ -219,7 +226,10 @@ const CommentCard: React.FC<CommentCardProps> = ({
             multiline
             rows={2}
             value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
+            onChange={(e) => {
+              console.log('✏️ Editing:', e.target.value);
+              setEditContent(e.target.value);
+            }}
             size="small"
             variant="outlined"
             autoFocus
@@ -256,6 +266,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Typography>
       )}
 
+      {/* Action Buttons */}
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <IconButton
           size="small"
@@ -283,6 +294,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Button>
       </Box>
 
+      {/* Reply Form */}
       {showReply && (
         <Box sx={{ mt: 2 }}>
           <TextField
@@ -290,7 +302,10 @@ const CommentCard: React.FC<CommentCardProps> = ({
             size="small"
             placeholder="Write a reply..."
             value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
+            onChange={(e) => {
+              console.log('✏️ Typing reply:', e.target.value);
+              setReplyContent(e.target.value);
+            }}
             multiline
             rows={2}
             variant="outlined"
@@ -317,6 +332,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Box>
       )}
 
+      {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           {comment.replies.map((reply) => (

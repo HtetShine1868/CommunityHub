@@ -60,19 +60,29 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
     setSubmitting(true);
     try {
-      // ✅ Pass the actual text content, not an object
-      await commentService.createComment(postId, { 
-        content: newComment.trim() 
-      });
+      // ✅ CRITICAL: Send ONLY the content string, not wrapped in an object
+      // The commentService expects { content: string }
+      const commentData = {
+        content: newComment.trim()
+      };
       
+      console.log('📝 Submitting comment - raw input:', newComment);
+      console.log('📤 Sending data:', commentData);
+      
+      const createdComment = await commentService.createComment(postId, commentData);
+      
+      console.log('✅ Server response:', createdComment);
+      
+      // Clear input and refresh
       setNewComment('');
-      await fetchComments(); // Refresh to show new comment
+      await fetchComments();
+      
       addNotification({
         type: 'success',
         message: 'Comment posted!',
       });
     } catch (error) {
-      console.error('Failed to post comment:', error);
+      console.error('❌ Failed to post comment:', error);
       setError('Failed to post comment');
       addNotification({
         type: 'error',
@@ -80,6 +90,120 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleReply = async (commentId: string, content: string) => {
+    if (!content.trim()) return;
+    
+    try {
+      // ✅ CRITICAL: Send ONLY the content string with parentId
+      const replyData = {
+        content: content.trim(),
+        parentId: commentId
+      };
+      
+      console.log('📝 Submitting reply - commentId:', commentId);
+      console.log('📤 Sending reply data:', replyData);
+      
+      const createdReply = await commentService.createComment(postId, replyData);
+      
+      console.log('✅ Reply created:', createdReply);
+      
+      await fetchComments();
+      
+      addNotification({
+        type: 'success',
+        message: 'Reply posted!',
+      });
+    } catch (error) {
+      console.error('❌ Failed to post reply:', error);
+      setError('Failed to post reply');
+      addNotification({
+        type: 'error',
+        message: 'Failed to post reply',
+      });
+    }
+  };
+
+  const handleEdit = async (commentId: string, content: string) => {
+    if (!content.trim()) return;
+    
+    try {
+      // ✅ CRITICAL: Send ONLY the content string
+      const editData = {
+        content: content.trim()
+      };
+      
+      console.log('📝 Editing comment:', commentId);
+      console.log('📤 Sending edit data:', editData);
+      
+      const updatedComment = await commentService.updateComment(commentId, editData);
+      
+      console.log('✅ Comment updated:', updatedComment);
+      
+      // Update local state optimistically
+      const updateCommentInTree = (commentsList: Comment[]): Comment[] => {
+        return commentsList.map(c => {
+          if (c.id === commentId) {
+            return { ...c, content: content.trim(), isEdited: true };
+          }
+          if (c.replies) {
+            return { ...c, replies: updateCommentInTree(c.replies) };
+          }
+          return c;
+        });
+      };
+      
+      setComments(updateCommentInTree(comments));
+      
+      addNotification({
+        type: 'success',
+        message: 'Comment updated!',
+      });
+    } catch (error) {
+      console.error('❌ Failed to update comment:', error);
+      setError('Failed to update comment');
+      addNotification({
+        type: 'error',
+        message: 'Failed to update comment',
+      });
+    }
+  };
+
+  const handleDelete = async (commentId: string) => {
+    if (!window.confirm('Delete this comment?')) return;
+    
+    try {
+      console.log('🗑️ Deleting comment:', commentId);
+      
+      await commentService.deleteComment(commentId);
+      
+      console.log('✅ Comment deleted');
+      
+      // Update local state optimistically
+      const removeCommentFromTree = (commentsList: Comment[]): Comment[] => {
+        return commentsList
+          .filter(c => c.id !== commentId)
+          .map(c => ({
+            ...c,
+            replies: c.replies ? removeCommentFromTree(c.replies) : []
+          }));
+      };
+      
+      setComments(removeCommentFromTree(comments));
+      
+      addNotification({
+        type: 'success',
+        message: 'Comment deleted',
+      });
+    } catch (error) {
+      console.error('❌ Failed to delete comment:', error);
+      setError('Failed to delete comment');
+      addNotification({
+        type: 'error',
+        message: 'Failed to delete comment',
+      });
     }
   };
 
@@ -91,130 +215,34 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       });
       return;
     }
+    
     try {
       await likeService.toggleCommentLike(commentId);
-      // Update local state instead of refetching all comments
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              liked: !comment.liked,
-              likeCount: comment.liked ? (comment.likeCount - 1) : (comment.likeCount + 1)
+      
+      // Optimistic update
+      const updateLikeInTree = (commentsList: Comment[]): Comment[] => {
+        return commentsList.map(c => {
+          if (c.id === commentId) {
+            const newLiked = !c.liked;
+            return { 
+              ...c, 
+              liked: newLiked, 
+              likeCount: newLiked ? (c.likeCount + 1) : (c.likeCount - 1) 
             };
           }
-          // Also check replies
-          if (comment.replies) {
-            return {
-              ...comment,
-              replies: comment.replies.map(reply => {
-                if (reply.id === commentId) {
-                  return {
-                    ...reply,
-                    liked: !reply.liked,
-                    likeCount: reply.liked ? (reply.likeCount - 1) : (reply.likeCount + 1)
-                  };
-                }
-                return reply;
-              })
-            };
+          if (c.replies) {
+            return { ...c, replies: updateLikeInTree(c.replies) };
           }
-          return comment;
-        })
-      );
+          return c;
+        });
+      };
+      
+      setComments(updateLikeInTree(comments));
     } catch (error) {
+      console.error('❌ Failed to like comment:', error);
       addNotification({
         type: 'error',
         message: 'Failed to like comment',
-      });
-    }
-  };
-
-  const handleReply = async (commentId: string, content: string) => {
-    if (!content.trim()) return;
-    
-    try {
-      // ✅ Pass the actual text content
-      await commentService.createComment(postId, { 
-        content: content.trim(), 
-        parentId: commentId 
-      });
-      
-      await fetchComments(); // Refresh to show new reply
-      addNotification({
-        type: 'success',
-        message: 'Reply posted!',
-      });
-    } catch (error) {
-      setError('Failed to post reply');
-      addNotification({
-        type: 'error',
-        message: 'Failed to post reply',
-      });
-    }
-  };
-
-  const handleDelete = async (commentId: string) => {
-    if (!window.confirm('Delete this comment?')) return;
-    try {
-      await commentService.deleteComment(commentId);
-      // Update local state
-      setComments(prevComments => 
-        prevComments.filter(comment => {
-          if (comment.id === commentId) return false;
-          if (comment.replies) {
-            comment.replies = comment.replies.filter(reply => reply.id !== commentId);
-          }
-          return true;
-        })
-      );
-      addNotification({
-        type: 'success',
-        message: 'Comment deleted',
-      });
-    } catch (error) {
-      setError('Failed to delete comment');
-      addNotification({
-        type: 'error',
-        message: 'Failed to delete comment',
-      });
-    }
-  };
-
-  const handleEdit = async (commentId: string, content: string) => {
-    if (!content.trim()) return;
-    
-    try {
-      await commentService.updateComment(commentId, { 
-        content: content.trim() 
-      });
-      
-      // Update local state
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          if (comment.id === commentId) {
-            return { ...comment, content, isEdited: true };
-          }
-          if (comment.replies) {
-            return {
-              ...comment,
-              replies: comment.replies.map(reply => 
-                reply.id === commentId ? { ...reply, content, isEdited: true } : reply
-              )
-            };
-          }
-          return comment;
-        })
-      );
-      addNotification({
-        type: 'success',
-        message: 'Comment updated!',
-      });
-    } catch (error) {
-      setError('Failed to update comment');
-      addNotification({
-        type: 'error',
-        message: 'Failed to update comment',
       });
     }
   };

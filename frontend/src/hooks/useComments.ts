@@ -35,29 +35,35 @@ export const useComments = (postId: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('🔍 Hook - Creating comment with data:', data);
+      console.log('   - content:', data.content);
+      console.log('   - content type:', typeof data.content);
+      
       const newComment = await commentService.createComment(postId, data);
       
+      console.log('✅ Hook - Comment created:', newComment);
+      
       if (data.parentId) {
-        // Add reply to parent comment - find the correct parent by ID
-        const updateReplies = (commentsList: Comment[]): Comment[] => {
-          return commentsList.map((c) => {
-            if (c.id === data.parentId) {
-              return {
-                ...c,
-                replies: [...(c.replies || []), newComment]
-              };
-            }
-            if (c.replies) {
-              return {
-                ...c,
-                replies: updateReplies(c.replies)
-              };
-            }
-            return c;
-          });
-        };
-        
-        setComments(updateReplies(comments));
+        setComments((prev) => {
+          const updateReplies = (commentsList: Comment[]): Comment[] => {
+            return commentsList.map((c) => {
+              if (c.id === data.parentId) {
+                return {
+                  ...c,
+                  replies: [...(c.replies || []), newComment]
+                };
+              }
+              if (c.replies) {
+                return {
+                  ...c,
+                  replies: updateReplies(c.replies)
+                };
+              }
+              return c;
+            });
+          };
+          return updateReplies(prev);
+        });
       } else {
         setComments((prev) => [...prev, newComment]);
       }
@@ -78,9 +84,13 @@ export const useComments = (postId: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('🔍 Hook - Updating comment:', id);
+      console.log('   - new content:', data.content);
+      
       const updated = await commentService.updateComment(id, data);
       
-      // Update the specific comment by ID, whether it's a top-level comment or reply
+      console.log('✅ Hook - Comment updated:', updated);
+      
       const updateInTree = (commentsList: Comment[]): Comment[] => {
         return commentsList.map((c) => {
           if (c.id === id) {
@@ -110,15 +120,18 @@ export const useComments = (postId: string) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('🔍 Hook - Deleting comment:', id);
+      
       await commentService.deleteComment(id);
       
-      // Delete the specific comment by ID, whether it's top-level or reply
+      console.log('✅ Hook - Comment deleted');
+      
       const removeFromTree = (commentsList: Comment[]): Comment[] => {
         return commentsList
-          .filter((c) => c.id !== id) // Remove the comment if it matches
+          .filter((c) => c.id !== id)
           .map((c) => ({
             ...c,
-            replies: c.replies ? removeFromTree(c.replies) : [], // Check replies recursively
+            replies: c.replies ? removeFromTree(c.replies) : [],
           }));
       };
       

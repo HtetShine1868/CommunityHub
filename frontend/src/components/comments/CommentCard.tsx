@@ -33,7 +33,7 @@ interface CommentCardProps {
   onPin?: (commentId: string) => void;
   currentUserId?: string;
   isPostAuthor?: boolean;
-  level?: number; // Track nesting level
+  level?: number;
 }
 
 const CommentCard: React.FC<CommentCardProps> = ({
@@ -76,16 +76,14 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleSaveEdit = () => {
     if (editContent.trim()) {
-      // Pass the comment ID to identify which comment to edit
-      onEdit(comment.id, editContent);
+      onEdit(comment.id, editContent.trim());
       setIsEditing(false);
     }
   };
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
-      // Pass the comment ID to identify which comment to reply to
-      onReply(comment.id, replyContent);
+      onReply(comment.id, replyContent.trim());
       setReplyContent('');
       setShowReply(false);
     }
@@ -100,13 +98,12 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
-      // Pass the comment ID to identify which comment to delete
       onDelete(comment.id);
     }
     handleMenuClose();
   };
 
-  const handleLike = () => {
+  const handleLikeClick = () => {
     onLike(comment.id);
   };
 
@@ -126,7 +123,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
       sx={{
         p: 2,
         mb: 2,
-        ml: level * 4, // Indent based on nesting level
+        ml: level * 4,
         borderLeft: comment.isPinned ? '4px solid' : 'none',
         borderLeftColor: 'primary.main',
         bgcolor: comment.isPinned ? 'primary.light' : 'background.paper',
@@ -136,7 +133,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         },
       }}
     >
-      {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar
@@ -183,7 +179,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
           </Box>
         </Box>
 
-        {/* Menu Button */}
         {(canEdit || canPin) && (
           <>
             <IconButton size="small" onClick={handleMenuOpen}>
@@ -215,7 +210,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         )}
       </Box>
 
-      {/* Content Section */}
       {isEditing ? (
         <Box sx={{ mt: 1 }}>
           <TextField
@@ -260,11 +254,10 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Typography>
       )}
 
-      {/* Action Buttons */}
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <IconButton
           size="small"
-          onClick={handleLike}
+          onClick={handleLikeClick}
           sx={{
             color: comment.liked ? 'error.main' : 'inherit',
           }}
@@ -288,7 +281,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Button>
       </Box>
 
-      {/* Reply Form */}
       {showReply && (
         <Box sx={{ mt: 2 }}>
           <TextField
@@ -323,7 +315,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Box>
       )}
 
-      {/* Nested Replies - Pass level + 1 for indentation */}
       {comment.replies && comment.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           {comment.replies.map((reply) => (
@@ -337,7 +328,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
               onPin={onPin}
               currentUserId={currentUserId}
               isPostAuthor={isPostAuthor}
-              level={level + 1} // Increment level for nesting
+              level={level + 1}
             />
           ))}
         </Box>

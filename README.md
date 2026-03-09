@@ -96,20 +96,20 @@ Refactor the Topic Detail Page and improve post fetching logic.
 
 
 **Challenge faced:**
-*Making the page responsive for both desktop and mobile screens.
-*Handling API responses where posts is returning  null, causing rendering issues in React.
-*Managing pagination and total counts correctly from backend responses.
+- Making the page responsive for both desktop and mobile screens.
+- Handling API responses where posts is returning  null, causing rendering issues in React.
+- Managing pagination and total counts correctly from backend responses.
 
 **Solution:**
 
-* Implemented a dropdown actions menu using **MUI Menu, MenuItem, and IconButton**.
-*Updated backend logic to ensure posts return an empty array instead of nil to prevent frontend crashes.
-*Improved the usePosts hook to safely handle missing API data using fallback values.
+- Implemented a dropdown actions menu using **MUI Menu, MenuItem, and IconButton**.
+- Updated backend logic to ensure posts return an empty array instead of nil to prevent frontend crashes.
+- Improved the usePosts hook to safely handle missing API data using fallback values.
 
 **How AI was used:**
-Asked questions about best practices for **Material UI menus, responsive layouts.
-Used AI  to research best practices for managing React state safely when data may be null. Also use ai as consultant to take guidance on improving the authentication hook structure and React data fetching patterns.
-Debug and make research on my code why the api return null 
+- Asked questions about best practices for **Material UI menus, responsive layouts.
+- Used AI  to research best practices for managing React state safely when data may be null. Also use ai as consultant to take guidance on improving the authentication hook structure and React data fetching patterns.
+- Debug and make research on my code why the api return null 
 
 **Code written by me:**
 All component logic, responsive styling, and integration with existing topic and post services.
@@ -135,8 +135,8 @@ Implement a complete **User Profile system** including profile display, editing 
 
 
 **How AI was used:**
-Used AI tools to research best practices for **React component architecture, custom hooks for state managementapplications, and structuring profile-related API services**
-**make review for my code and debug for the 500 errors why this happen not blindly copy and paste**.
+- Used AI tools to research best practices for **React component architecture, custom hooks for state managementapplications, and structuring profile-related API services
+- make review for my code and debug for the 500 errors why this happen not blindly copy and paste.
 
 **Code written by me:**
 All components, hooks, API services, state management logic, UI layout, and integration with backend profile endpoints were implemented.

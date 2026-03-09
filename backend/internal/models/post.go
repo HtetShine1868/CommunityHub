@@ -27,7 +27,7 @@ type Post struct {
     Topic     Topic           `gorm:"foreignKey:TopicID" json:"topic,omitempty"`
     Comments  []Comment       `json:"comments,omitempty"`
     Likes     []Like          `json:"likes,omitempty"`
-    Tags      []Tag           `gorm:"many2many:post_tags;" json:"tags,omitempty"`
+
 }
 
 func (Post) TableName() string {

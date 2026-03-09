@@ -196,16 +196,6 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
     comment.EditedAt = &now
     comment.UpdatedAt = now
 
-   
-    updateMap := map[string]interface{}{
-        "content":    comment.Content,
-        "is_edited":  comment.IsEdited,
-        "edited_at":  comment.EditedAt,
-        "updated_at": comment.UpdatedAt,
-    }
-    fmt.Println("Saving to database...")
-
-
     if err := h.commentRepo.Update(comment); err != nil {
         fmt.Printf("Database error: %v\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update comment"})
@@ -220,10 +210,6 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
         return
     }
     
-    fmt.Printf("📤 AFTER update - Comment from database:\n")
-    fmt.Printf("   - ID: %s\n", updated.ID)
-    fmt.Printf("   - Content: %q\n", updated.Content)
-    fmt.Printf("   - IsEdited: %v\n", updated.IsEdited)
     
     if updated.Content == oldContent {
         fmt.Println("WARNING: Content did not change in database!")

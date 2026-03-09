@@ -12,7 +12,7 @@ export interface Topic {
   categoryId?: string;
   userId: string;
   user?: User;
-  category?: Category; // Add this
+  category?: Category;
   postCount?: number;
   followerCount?: number;
   createdAt: string;
@@ -25,7 +25,7 @@ export interface CreateTopicData {
   icon?: string;
   color?: string;
   isPrivate?: boolean;
-  categoryId?: string; // Add this
+  categoryId?: string;
 }
 
 export interface UpdateTopicData {
@@ -34,5 +34,5 @@ export interface UpdateTopicData {
   icon?: string;
   color?: string;
   isPrivate?: boolean;
-  categoryId?: string; // Add this
+  categoryId?: string;
 }

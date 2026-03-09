@@ -1,7 +1,6 @@
 package handlers
 
 import (
-    "communityHub/internal/models"
     "communityHub/internal/repository"
     "net/http"
     "github.com/gin-gonic/gin"

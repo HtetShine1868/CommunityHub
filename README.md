@@ -85,6 +85,7 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 **Code written by me:** All initial configuration files and boilerplate code 
 
+---
 
 #### AI Usage Declaration - Commit by Commit
 
@@ -116,6 +117,7 @@ Debug and make research on my code why the api return null
 **Code written by me:**
 All component logic, responsive styling, and integration with existing topic and post services.
 
+---
 
 #### AI Usage Declaration - Commit by Commit
 
@@ -144,6 +146,7 @@ Used AI tools to research best practices for **React component architecture, cus
 **Code written by me:**
 All components, hooks, API services, state management logic, UI layout, and integration with backend profile endpoints were implemented.
 
+---
 
 #### AI Usage Declaration - Commit by Commit
 
@@ -177,6 +180,8 @@ Used AI tools to research best practices for **handling optional relational data
 
 **Code written by me:**
 All backend model updates, repository adjustments, frontend component changes, TypeScript type definitions, and UI integration were implemented and tested by me.
+
+---
 
 #### AI Usage Declaration - Commit by Commit
 #### Commit: fix comment replies editing and deletion affecting main comment

@@ -66,8 +66,7 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 - Github -used this for research,getting feedback on my code structre and also use this for debugging 
 - Deepseek -used this for debugging tricky error,reserching and reviewing my login
 
-
-#### AI Usage Declaration - Commit by Commit
+### AI Usage Declaration - Commit by Commit
 
 #### Commit: `fix the migration and setup for deployment`
 **Date:** March 1, 2026  
@@ -86,8 +85,6 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 **Code written by me:** All initial configuration files and boilerplate code 
 
 ---
-
-#### AI Usage Declaration - Commit by Commit
 
 #### Commit: `improve topic detail page UI and backend post count fetching error `
 **Date:** March 4, 2026
@@ -119,9 +116,7 @@ All component logic, responsive styling, and integration with existing topic and
 
 ---
 
-#### AI Usage Declaration - Commit by Commit
-
-#### Commit: `implement user profile system to work with be `
+#### Commit: `implement user profile system to work with backend `
 **Date:** March 5, 2026
 **AI Tool Used:** ChatGPT, Deepseek
 
@@ -147,8 +142,6 @@ Used AI tools to research best practices for **React component architecture, cus
 All components, hooks, API services, state management logic, UI layout, and integration with backend profile endpoints were implemented.
 
 ---
-
-#### AI Usage Declaration - Commit by Commit
 
 #### Commit: `add category support to topics and update topic UI with category fields`
 
@@ -183,7 +176,6 @@ All backend model updates, repository adjustments, frontend component changes, T
 
 ---
 
-#### AI Usage Declaration - Commit by Commit
 #### Commit: fix comment replies editing and deletion affecting main comment
 
 Date: March 7 to 8,2026

@@ -18,7 +18,7 @@ type PostHandler struct {
     db        *gorm.DB
 }
 
-func NewPostHandler(postRepo *repository.PostRepository, topicRepo *repository.TopicRepository, tagRepo *repository.TagRepository, db *gorm.DB) *PostHandler {
+func NewPostHandler(postRepo *repository.PostRepository, topicRepo *repository.TopicRepository, db *gorm.DB) *PostHandler {
     return &PostHandler{
         postRepo:  postRepo,
         topicRepo: topicRepo,

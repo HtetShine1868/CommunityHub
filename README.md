@@ -26,8 +26,8 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 
 ### Clone the Repository
--git clone https://github.com/HtetShine1868/CommunityHub.git
--cd CommunityHub
+- git clone https://github.com/HtetShine1868/CommunityHub.git
+- cd CommunityHub
 
 ### Backend Setup
 - cd backend

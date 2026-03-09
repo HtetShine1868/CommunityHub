@@ -172,7 +172,6 @@ func (h *UserHandler) GetUserPosts(c *gin.Context) {
     err = h.userRepo.GetDB().
         Where("user_id = ?", uid).
         Preload("Topic").
-        Preload("Tags").
         Order("is_pinned desc, created_at desc").
         Offset((page - 1) * pageSize).
         Limit(pageSize).

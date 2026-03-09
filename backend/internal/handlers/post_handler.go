@@ -3,7 +3,6 @@ package handlers
 import (
     "communityHub/internal/models"
     "communityHub/internal/repository"
-    "fmt"
     "net/http"
     "strconv"
     "time"
@@ -16,15 +15,13 @@ import (
 type PostHandler struct {
     postRepo  *repository.PostRepository
     topicRepo *repository.TopicRepository
-    tagRepo   *repository.TagRepository
     db        *gorm.DB
 }
 
-func NewPostHandler(postRepo *repository.PostRepository, topicRepo *repository.TopicRepository, tagRepo *repository.TagRepository, db *gorm.DB) *PostHandler {
+func NewPostHandler(postRepo *repository.PostRepository, topicRepo *repository.TopicRepository, db *gorm.DB) *PostHandler {
     return &PostHandler{
         postRepo:  postRepo,
         topicRepo: topicRepo,
-        tagRepo:   tagRepo,
         db:        db,
     }
 }
@@ -41,7 +38,6 @@ type PostResponse struct {
     TopicID      string         `json:"topicId"`
     User         *models.User   `json:"user,omitempty"`
     Topic        *models.Topic  `json:"topic,omitempty"`
-    Tags         []models.Tag   `json:"tags,omitempty"`
     LikeCount    int64          `json:"likeCount"`
     Liked        bool           `json:"liked"`
     CommentCount int64          `json:"commentCount"`
@@ -379,7 +375,6 @@ func (h *PostHandler) buildPostResponse(post models.Post, currentUserID uuid.UUI
         TopicID:      post.TopicID.String(),
         User:         &post.User,
         Topic:        &post.Topic,
-        Tags:         post.Tags,
         LikeCount:    likeCount,
         Liked:        liked,
         CommentCount: commentCount,

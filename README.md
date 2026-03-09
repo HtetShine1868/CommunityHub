@@ -34,29 +34,29 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 -go mod download
 
 ### Create .env file
--DATABASE_URL=postgresql://username:password@localhost:5432/communityhub?
--sslmode=disable
--JWT_SECRET=your-secret-jwt-key
--PORT=8080
--ENVIRONMENT=development
--FRONTEND_URL=http://localhost:3000
+- DATABASE_URL=postgresql://username:password@localhost:5432/communityhub?
+- sslmode=disable
+- JWT_SECRET=your-secret-jwt-key
+- PORT=8080
+- ENVIRONMENT=development
+- FRONTEND_URL=http://localhost:3000
 
 ### Create PostgreSQL database
--CREATE DATABASE communityhub;
+- CREATE DATABASE communityhub;
 
 ### Run the backend server
--go run cmd/api/main.go
+- go run cmd/api/main.go
 
 
 ### Frontend Setup
--cd frontend
--npm install
+- cd frontend
+- npm install
 
 ### Create .env file
--VITE_API_URL=http://localhost:8080/api
+- VITE_API_URL=http://localhost:8080/api
 
 ### Run the frontend server
--npm run dev
+- npm run dev
 
 ---
 

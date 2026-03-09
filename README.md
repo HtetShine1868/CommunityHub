@@ -57,3 +57,31 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 ### Run the frontend server
 - npm run dev
+
+---
+
+## AI Usage Declaration
+
+### Ai tools Used
+- Github -used this for research,getting feedback on my code structre and also use this for debugging 
+- Deepseek -used this for debugging tricky error,reserching and reviewing my login
+
+
+#### AI Usage Declaration - Commit by Commit
+
+##### Commit: `fix the migration and setup for deployment`
+**Date:** March 1, 2026  
+**AI Tool Used:** ChatGPT,Deepseek 
+
+**Purpose:** Research on how to deploy as this is my first time and remove models that i create intially which might need for some features but these features are not currently necessary for now so i remove these models 
+
+**Challenge faced**First time of making deployment,and when i deploy frontend the size is larger that the free render can deploy 
+
+**Solution**
+- Removed unnecessary models (Follow, SavedPost, Notification) to simplify the database schema
+- Optimized frontend build by changing from using react to vite 
+
+**How AI was used:** Asked about how to deploy  Go projects and React with Typescript. Researched about Render deployment limits and how to reduce bundle size.
+
+**Code written by me:** All initial configuration files and boilerplate code 
+

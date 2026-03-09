@@ -1,5 +1,8 @@
 # Community Hub 
 
+> 🚀 **Live Demo:** [https://communityhub-1-ucxs.onrender.com]
+> *(Note: Initial load may take 30-60 seconds as Render's free tier spins up the server.)*
+
 ## Student Information
 **Name:** Htet Aung Shine  
 **Matriculation Number:** TNT-2134
@@ -62,6 +65,9 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 ## AI Usage Declaration
 
+###
+Every line of code in this repository has been thoroughly reviewed and implemented by me; AI was used strictly for research and troubleshooting, not as a code generator.
+
 ### Ai tools Used
 - Github -used this for research,getting feedback on my code structre and also use this for debugging 
 - Deepseek -used this for debugging tricky error,reserching and reviewing my login
@@ -74,7 +80,7 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 **Purpose:** Research on how to deploy as this is my first time and remove models that i create intially which might need for some features but these features are not currently necessary for now so i remove these models 
 
-**Challenge faced**First time of making deployment,and when i deploy frontend the size is larger that the free render can deploy 
+**Challenge faced**: First time of making deployment,and when i deploy frontend the size is larger that the free render can deploy 
 
 **Solution**
 - Removed unnecessary models (Follow, SavedPost, Notification) to simplify the database schema

@@ -187,17 +187,17 @@ Fix the issue where editing or deleting a reply incorrectly affected the main/to
 
 Challenge faced:
 
-*Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
-*Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
-*Delete actions on replies affected the main comment because the reply list was not correctly traversed.
-*The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
+- *Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
+- *Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
+- *Delete actions on replies affected the main comment because the reply list was not correctly traversed.
+- *The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
 
 Solution:
 
-*Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
-*Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
-*Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
-*Ensured nested replies are indented correctly and maintain separation from top-level comments.
+- *Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
+- *Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
+- *Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
+- *Ensured nested replies are indented correctly and maintain separation from top-level comments.
 
 How AI was used:
 Used AI tools to research best practices for handling recursive updates in React state, managing nested data structures in TypeScript, and debugging common issues with comment threads in frontend applications.

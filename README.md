@@ -1,6 +1,6 @@
 # Community Hub 
 
-> 🚀 **Live Demo:** [https://communityhub-1-ucxs.onrender.com]
+## 🚀 **Live Demo:** [https://communityhub-1-ucxs.onrender.com]
 * (Note: Initial load may take 30-60 seconds as Render's free tier spins up the server.)*
 
 ## Student Information

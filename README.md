@@ -124,14 +124,14 @@ All component logic, responsive styling, and integration with existing topic and
 Implement a complete **User Profile system** including profile display, editing functionality, and profile activity tabs such as posts
 
 **Challenge faced:**
-*fetching user and users posts data from backend and show on frontend
-*Structuring the profile system into reusable components and hooks while keeping the code maintainable.
+- fetching user and users posts data from backend and show on frontend
+- Structuring the profile system into reusable components and hooks while keeping the code maintainable.
 
 **Solution:**
 
-*first test the backend api to make sure it actually work by testing the api using postmen and then after it work i fetch from the frontend.
-*Implemented a custom useProfile hook to manage profile state, API calls, and pagination logic.
-*Added profileService to centralize all profile-related API requests.
+- first test the backend api to make sure it actually work by testing the api using postmen and then after it work i fetch from the frontend.
+- Implemented a custom useProfile hook to manage profile state, API calls, and pagination logic.
+- Added profileService to centralize all profile-related API requests.
 
 
 **How AI was used:**
@@ -154,19 +154,19 @@ Introduce **category support for topics** and update the frontend UI to display 
 
 **Challenge faced:**
 
-* Integrating **category data into the existing topic structure** without breaking existing API responses.
-* Updating **TypeScript types** to correctly support optional category relationships.
-* Displaying category information in the UI while maintaining consistent styling with Material UI components.
-* Handling cases where topics might not have a category assigned.
+- Integrating **category data into the existing topic structure** without breaking existing API responses.
+- Updating **TypeScript types** to correctly support optional category relationships.
+- Displaying category information in the UI while maintaining consistent styling with Material UI components.
+- Handling cases where topics might not have a category assigned.
 
 **Solution:**
 
-* Updated **Topic and Post TypeScript interfaces** to include optional category relationships.
-* Modified backend **Topic model** to include a `Category` relationship using a foreign key.
-* Updated the **topic repository** to correctly manage topic retrieval and relationships.
-* Enhanced **TopicCard** and **TopicDetailPage** components to display category information using styled **Material UI Chips** with category icons and colors.
-* Implemented conditional rendering to ensure the category chip only appears when a category exists.
-* Organized UI elements so that **category and privacy chips** are displayed together in a responsive layout.
+- Updated **Topic and Post TypeScript interfaces** to include optional category relationships.
+- Modified backend **Topic model** to include a `Category` relationship using a foreign key.
+- updated the **topic repository** to correctly manage topic retrieval and relationships.
+- Enhanced **TopicCard** and **TopicDetailPage** components to display category information using styled **Material UI Chips** with category icons and colors.
+- Implemented conditional rendering to ensure the category chip only appears when a category exists.
+- Organized UI elements so that **category and privacy chips** are displayed together in a responsive layout.
 
 **How AI was used:**
 Used AI tools to research best practices for **handling optional relational data in TypeScript interfaces, structuring React components with Material UI chips, and managing foreign key relationships in Go using GORM**.
@@ -187,17 +187,17 @@ Fix the issue where editing or deleting a reply incorrectly affected the main/to
 
 Challenge faced:
 
-- *Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
-- *Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
-- *Delete actions on replies affected the main comment because the reply list was not correctly traversed.
-- *The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
+- Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
+- Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
+- Delete actions on replies affected the main comment because the reply list was not correctly traversed.
+- The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
 
 Solution:
 
-- *Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
-- *Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
-- *Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
-- *Ensured nested replies are indented correctly and maintain separation from top-level comments.
+- Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
+- Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
+- Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
+- Ensured nested replies are indented correctly and maintain separation from top-level comments.
 
 How AI was used:
 Used AI tools to research best practices for handling recursive updates in React state, managing nested data structures in TypeScript, and debugging common issues with comment threads in frontend applications.

@@ -25,15 +25,15 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 - Git
 
 
-Clone the Repository
+### Clone the Repository
 -git clone https://github.com/HtetShine1868/CommunityHub.git
 -cd CommunityHub
 
-Backend Setup
+### Backend Setup
 -cd backend
 -go mod download
 
-Create .env file
+### Create .env file
 -DATABASE_URL=postgresql://username:password@localhost:5432/communityhub?
 -sslmode=disable
 -JWT_SECRET=your-secret-jwt-key
@@ -41,19 +41,19 @@ Create .env file
 -ENVIRONMENT=development
 -FRONTEND_URL=http://localhost:3000
 
-Create PostgreSQL database
+### Create PostgreSQL database
 -CREATE DATABASE communityhub;
 
-Run the backend server
+### Run the backend server
 -go run cmd/api/main.go
 
 
-Frontend Setup
+### Frontend Setup
 -cd frontend
 -npm install
 
-Create .env file
+### Create .env file
 -VITE_API_URL=http://localhost:8080/api
 
-Run the frontend server
+### Run the frontend server
 -npm run dev

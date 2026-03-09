@@ -1,7 +1,7 @@
 # Community Hub 
 
 ## 🚀 **Live Demo:** [https://communityhub-1-ucxs.onrender.com]
-* (Note: Initial load may take 30-60 seconds as Render's free tier spins up the server.)*
+(Note: Initial load may take 30-60 seconds as Render's free tier spins up the server.)
 
 ## Student Information
 **Name:** Htet Aung Shine  
@@ -65,7 +65,7 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 
 ## AI Usage Declaration
 
-###
+### Code Ownership & AI Usage
 Every line of code in this repository has been thoroughly reviewed and implemented by me; AI was used strictly for research and troubleshooting, not as a code generator.
 
 ### Ai tools Used

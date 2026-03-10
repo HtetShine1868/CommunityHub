@@ -66,11 +66,11 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 ## AI Usage Declaration
 
 ### Code Ownership & AI Usage
-Every line of code in this repository has been thoroughly reviewed and implemented by me; AI was used strictly for research and troubleshooting, not as a code generator.
+I understand every line of code in this project and Each line of code in this repository has been thoroughly reviewed and implemented by me; AI was used strictly for research,review the code  and troubleshooting, not as a code generator.
 
 ### Ai tools Used
 - Github -used this for research,getting feedback on my code structre and also use this for debugging 
-- Deepseek -used this for debugging tricky error,reserching and reviewing my login
+- Deepseek -used this for debugging tricky error,reserch and review my code
 
 ### AI Usage Declaration - Commit by Commit
 

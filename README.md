@@ -156,26 +156,26 @@ All components, hooks, API services, state management logic, UI layout, and inte
 **AI Tool Used:** ChatGPT, Deepseek
 
 **Purpose:**
-Introduce **category support for topics** and update the frontend UI to display category information using visual chips. This update improves topic organization and enhances the user interface by clearly showing topic categories and privacy status.
+Introduce category support for topics and update the frontend UI to display category information using visual chips. This update improves topic organization and enhances the user interface by clearly showing topic categories and privacy status.
 
 **Challenge faced:**
 
-- Integrating **category data into the existing topic structure** without breaking existing API responses.
-- Updating **TypeScript types** to correctly support optional category relationships.
+- Integrating category data into the existing topic structure without breaking existing API responses.
+- Updating TypeScript types to correctly support optional category relationships.
 - Displaying category information in the UI while maintaining consistent styling with Material UI components.
 - Handling cases where topics might not have a category assigned.
 
 **Solution:**
 
-- Updated **Topic and Post TypeScript interfaces** to include optional category relationships.
-- Modified backend **Topic model** to include a `Category` relationship using a foreign key.
-- updated the **topic repository** to correctly manage topic retrieval and relationships.
-- Enhanced **TopicCard** and **TopicDetailPage** components to display category information using styled **Material UI Chips** with category icons and colors.
+- Updated Topic and Post TypeScript interfaces to include optional category relationships.
+- Modified backend Topic model to include a `Category` relationship using a foreign key.
+- updated the topic repository to correctly manage topic retrieval and relationships.
+- Enhanced TopicCard and TopicDetailPage components to display category information using styled Material UI Chips with category icons and colors.
 - Implemented conditional rendering to ensure the category chip only appears when a category exists.
-- Organized UI elements so that **category and privacy chips** are displayed together in a responsive layout.
+- Organized UI elements so that category and privacy chips are displayed together in a responsive layout.
 
 **How AI was used:**
-Used AI tools to research best practices for **handling optional relational data in TypeScript interfaces, structuring React components with Material UI chips, and managing foreign key relationships in Go using GORM**.
+Used AI tools to research best practices for handling optional relational data in TypeScript interfaces, structuring React components with Material UI chips, and managing foreign key relationships in Go using GORM.
 
 **Code written by me:**
 All backend model updates, repository adjustments, frontend component changes, TypeScript type definitions, and UI integration were implemented and tested by me.
@@ -184,28 +184,28 @@ All backend model updates, repository adjustments, frontend component changes, T
 
 #### Commit: fix comment replies editing and deletion affecting main comment
 
-Date: March 7 to 8,2026
+**Date:** March 7 to 8,2026
 
-AI Tool Used: ChatGPT,DeepSeek
+**AI Tool Used:** ChatGPT,DeepSeek
 
-Purpose:
+**Purpose:**
 Fix the issue where editing or deleting a reply incorrectly affected the main/top-level comment and where replies displayed their UUID instead of the actual text. Ensured that all comment actions (edit, delete, like, reply) correctly work on nested replies without interfering with other comments.
 
-Challenge faced:
+**Challenge faced:**
 
 - Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
 - Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
 - Delete actions on replies affected the main comment because the reply list was not correctly traversed.
 - The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
 
-Solution:
+**Solution:**
 
 - Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
 - Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
 - Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
 - Ensured nested replies are indented correctly and maintain separation from top-level comments.
 
-How AI was used:
+**How AI was used:**
 Used AI tools to research best practices for handling recursive updates in React state, managing nested data structures in TypeScript, and debugging common issues with comment threads in frontend applications.
 
 

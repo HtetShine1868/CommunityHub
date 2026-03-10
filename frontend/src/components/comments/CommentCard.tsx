@@ -87,11 +87,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
-      console.log('Reply content from input:', replyContent.trim());
-      console.log('Calling onReply with:', {
-        commentId: comment.id,
-        content: replyContent.trim()
-      });
+      console.log('📝 Replying to comment:', comment.id, 'with content:', replyContent.trim());
+      // Pass the current comment's ID as the parentId
       onReply(comment.id, replyContent.trim());
       setReplyContent('');
       setShowReply(false);
@@ -127,7 +124,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
     return comment.user?.username || 'Unknown User';
   };
 
-  // Pinned comment styles based on theme mode
   const pinnedStyles = comment.isPinned ? {
     borderLeft: `4px solid ${theme.palette.primary.main}`,
     backgroundColor: theme.palette.mode === 'dark' 
@@ -209,7 +205,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
           </Box>
         </Box>
 
-        {/* Menu Button */}
         {(canEdit || canPin) && (
           <>
             <IconButton size="small" onClick={handleMenuOpen}>
@@ -241,7 +236,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         )}
       </Box>
 
-      {/* Content Section */}
       {isEditing ? (
         <Box sx={{ mt: 1 }}>
           <TextField
@@ -291,7 +285,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Typography>
       )}
 
-      {/* Action Buttons */}
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         <IconButton
           size="small"
@@ -313,27 +306,31 @@ const CommentCard: React.FC<CommentCardProps> = ({
         <Button
           size="small"
           startIcon={<Reply />}
-          onClick={() => setShowReply(!showReply)}
+          onClick={() => {
+            console.log('🔘 Reply button clicked for comment:', comment.id);
+            setShowReply(!showReply);
+          }}
         >
           Reply
         </Button>
       </Box>
 
-      {/* Reply Form */}
+
       {showReply && (
         <Box sx={{ mt: 2 }}>
           <TextField
             fullWidth
             size="small"
-            placeholder="Write a reply..."
+            placeholder={`Reply to ${getUserName()}...`}
             value={replyContent}
             onChange={(e) => {
-              console.log('✏️ Typing reply:', e.target.value);
+              console.log('✏️ Typing reply to', comment.id, ':', e.target.value);
               setReplyContent(e.target.value);
             }}
             multiline
             rows={2}
             variant="outlined"
+            autoFocus
           />
           <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
             <Button
@@ -342,7 +339,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
               onClick={handleReplySubmit}
               disabled={!replyContent.trim()}
             >
-              Reply
+              Post Reply
             </Button>
             <Button
               size="small"
@@ -357,7 +354,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
         </Box>
       )}
 
-      {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
           {comment.replies.map((reply) => (

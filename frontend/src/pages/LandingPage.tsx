@@ -157,26 +157,7 @@ const LandingPage: React.FC = () => {
               </Button>
             </Box>
 
-                {/* Stats */}
-                <Box sx={{ display: 'flex', gap: 4, mt: 6 }}>
-                  {stats.map((stat, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + index * 0.1 }}
-                    >
-                      <Box>
-                        <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                          {stat.value}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {stat.label}
-                        </Typography>
-                      </Box>
-                    </motion.div>
-                  ))}
-                </Box>
+
               </motion.div>
             </Grid>
 

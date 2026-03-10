@@ -10,6 +10,8 @@ import {
   MenuItem,
   Avatar,
   Chip,
+  alpha,
+  useTheme,
 } from '@mui/material';
 import {
   Favorite,
@@ -47,6 +49,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
   isPostAuthor = false,
   level = 0,
 }) => {
+  const theme = useTheme();
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -124,21 +127,31 @@ const CommentCard: React.FC<CommentCardProps> = ({
     return comment.user?.username || 'Unknown User';
   };
 
+  // Pinned comment styles based on theme mode
+  const pinnedStyles = comment.isPinned ? {
+    borderLeft: `4px solid ${theme.palette.primary.main}`,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? alpha(theme.palette.primary.main, 0.2)
+      : alpha(theme.palette.primary.main, 0.08),
+    boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.15)}`,
+  } : {};
+
   return (
     <Paper
       sx={{
         p: 2,
         mb: 2,
         ml: level * 4,
-        borderLeft: comment.isPinned ? '4px solid' : 'none',
-        borderLeftColor: 'primary.main',
-        bgcolor: comment.isPinned ? 'primary.light' : 'background.paper',
         transition: 'all 0.2s ease',
+        ...pinnedStyles,
         '&:hover': {
-          boxShadow: 2,
+          boxShadow: comment.isPinned 
+            ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.25)}`
+            : 2,
         },
       }}
     >
+      {/* Header Section */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar
@@ -146,24 +159,35 @@ const CommentCard: React.FC<CommentCardProps> = ({
             sx={{
               width: 32,
               height: 32,
-              bgcolor: 'primary.main',
+              bgcolor: comment.isPinned ? 'primary.main' : 'primary.light',
               fontSize: '0.875rem',
+              color: comment.isPinned ? 'white' : 'inherit',
             }}
           >
             {getUserInitial()}
           </Avatar>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-              <Typography variant="subtitle2" fontWeight={600}>
+              <Typography 
+                variant="subtitle2" 
+                fontWeight={600}
+                sx={{
+                  color: comment.isPinned ? 'primary.main' : 'text.primary',
+                }}
+              >
                 {getUserName()}
               </Typography>
               {comment.isPinned && (
                 <Chip
-                  icon={<PushPin />}
+                  icon={<PushPin sx={{ fontSize: 14 }} />}
                   label="Pinned"
                   size="small"
-                  color="primary"
-                  sx={{ height: 20, '& .MuiChip-label': { px: 1 } }}
+                  sx={{ 
+                    height: 20, 
+                    '& .MuiChip-label': { px: 1, fontSize: '0.65rem', fontWeight: 600 },
+                    backgroundColor: theme.palette.primary.main,
+                    color: 'white',
+                  }}
                 />
               )}
             </Box>
@@ -259,6 +283,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
             mb: 1,
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
+            color: 'text.primary',
+            fontWeight: comment.isPinned ? 500 : 400,
           }}
         >
           {comment.content}
@@ -271,7 +297,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
           size="small"
           onClick={handleLikeClick}
           sx={{
-            color: comment.liked ? 'error.main' : 'inherit',
+            color: comment.liked ? 'error.main' : 'action.active',
           }}
         >
           {comment.liked ? (

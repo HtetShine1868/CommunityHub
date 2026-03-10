@@ -93,8 +93,8 @@ I understand every line of code in this project and Each line of code in this re
 ---
 
 #### Commit: `improve topic detail page UI and backend post count fetching error `
-**Date:** March 4, 2026
-**AI Tool Used:** ChatGPT, Deepseek
+**Date:** March 4, 2026  
+**AI Tool Used:** ChatGPT,Deepseek 
 
 **Purpose:**
 Improve the Topic Detail Page UI and by adding a responsive actions menu.
@@ -123,8 +123,8 @@ All component logic, responsive styling, and integration with existing topic and
 ---
 
 #### Commit: `implement user profile system to work with backend `
-**Date:** March 5, 2026
-**AI Tool Used:** ChatGPT, Deepseek
+**Date:** March 5, 2026  
+**AI Tool Used:** ChatGPT,Deepseek 
 
 **Purpose:**
 Implement a complete **User Profile system** including profile display, editing functionality, and profile activity tabs such as posts
@@ -151,9 +151,8 @@ All components, hooks, API services, state management logic, UI layout, and inte
 
 #### Commit: `add category support to topics and update topic UI with category fields`
 
-**Date:** March 6, 2026
-
-**AI Tool Used:** ChatGPT, Deepseek
+**Date:** March 6, 2026  
+**AI Tool Used:** ChatGPT,Deepseek 
 
 **Purpose:**
 Introduce category support for topics and update the frontend UI to display category information using visual chips. This update improves topic organization and enhances the user interface by clearly showing topic categories and privacy status.

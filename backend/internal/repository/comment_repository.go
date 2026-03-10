@@ -33,50 +33,73 @@ func (r *CommentRepository) Create(comment *models.Comment) error {
     return nil
 }
 
-func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]models.Comment, int64, error) {
-    var comments []models.Comment
-    var total int64
+    func (r *CommentRepository) FindByPost(postID uuid.UUID, page, pageSize int) ([]models.Comment, int64, error) {
+        var comments []models.Comment
+        var total int64
 
-    db := r.db.Model(&models.Comment{}).Where("post_id = ? AND parent_id IS NULL", postID)
-    
-    err := db.Count(&total).Error
-    if err != nil {
-        fmt.Printf("Error counting comments: %v\n", err)
-        return nil, 0, err
-    }
-
-    if total == 0 {
-        return []models.Comment{}, 0, nil
-    }
-
-    // Get paginated comments
-    err = db.Preload("User").
-        Offset((page - 1) * pageSize).
-        Limit(pageSize).
-        Order("is_pinned desc, created_at asc").
-        Find(&comments).Error
+        // Get top-level comments only (no parent)
+        db := r.db.Model(&models.Comment{}).Where("post_id = ? AND parent_id IS NULL", postID)
         
-    if err != nil {
-        fmt.Printf("Error fetching comments: %v\n", err)
-        return nil, 0, err
+        err := db.Count(&total).Error
+        if err != nil {
+            fmt.Printf("Error counting comments: %v\n", err)
+            return nil, 0, err
+        }
+
+        if total == 0 {
+            return []models.Comment{}, 0, nil
+        }
+
+        // Get paginated top-level comments
+        err = db.Preload("User").
+            Offset((page - 1) * pageSize).
+            Limit(pageSize).
+            Order("is_pinned desc, created_at asc").
+            Find(&comments).Error
+            
+        if err != nil {
+            fmt.Printf("Error fetching comments: %v\n", err)
+            return nil, 0, err
+        }
+
+        // Load ALL replies recursively for each comment
+        for i := range comments {
+            if err := r.loadAllReplies(&comments[i]); err != nil {
+                fmt.Printf("Error loading replies for comment %s: %v\n", comments[i].ID, err)
+            }
+        }
+
+        return comments, total, nil
     }
 
-    // Load replies for each comment
-    for i := range comments {
+    func (r *CommentRepository) loadAllReplies(comment *models.Comment) error {
         var replies []models.Comment
-        r.db.Where("parent_id = ?", comments[i].ID).
+    
+        err := r.db.Where("parent_id = ?", comment.ID).
             Preload("User").
             Order("created_at asc").
-            Find(&replies)
-        comments[i].Replies = replies
-        comments[i].ReplyCount = int64(len(replies))
-        
-        var likeCount int64
-        r.db.Model(&models.Like{}).Where("comment_id = ?", comments[i].ID).Count(&likeCount)
-        comments[i].LikeCount = likeCount
-    }
+            Find(&replies).Error
+        if err != nil {
+            return err
+        }
 
-    return comments, total, nil
+        for i := range replies {
+            if err := r.loadAllReplies(&replies[i]); err != nil {
+                return err
+            }
+            var likeCount int64
+            r.db.Model(&models.Like{}).Where("comment_id = ?", replies[i].ID).Count(&likeCount)
+            replies[i].LikeCount = likeCount
+        }
+
+        comment.Replies = replies
+        comment.ReplyCount = int64(len(replies))
+
+        var likeCount int64
+        r.db.Model(&models.Like{}).Where("comment_id = ?", comment.ID).Count(&likeCount)
+        comment.LikeCount = likeCount
+        
+        return nil
 }
 
 func (r *CommentRepository) FindReplies(commentID uuid.UUID, page, pageSize int) ([]models.Comment, int64, error) {

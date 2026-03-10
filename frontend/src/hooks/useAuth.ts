@@ -79,7 +79,6 @@ export const useAuth = () => {
       navigate('/login');
     } catch (err: any) {
       console.error('Logout error:', err);
-      // Still clear local state even if backend fails
       storeLogout();
       addNotification({ type: 'error', message: 'Logout failed, but cleared local session' });
       navigate('/login');

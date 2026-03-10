@@ -56,6 +56,8 @@ const CommentCard: React.FC<CommentCardProps> = ({
   const [editContent, setEditContent] = useState(comment.content);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+  console.log(`CommentCard rendered for comment: ${comment.id}, level: ${level}, replies: ${comment.replies?.length || 0}`);
+
   const isAuthor = currentUserId === comment.userId;
   const isAdmin = useAuthStore.getState().user?.role === 'admin' || 
                   useAuthStore.getState().user?.role === 'moderator';
@@ -73,13 +75,14 @@ const CommentCard: React.FC<CommentCardProps> = ({
   };
 
   const handleEdit = () => {
+    console.log(` Edit clicked for comment: ${comment.id}`);
     setIsEditing(true);
     handleMenuClose();
   };
 
   const handleSaveEdit = () => {
     if (editContent.trim()) {
-      console.log('💬 Saving edit - content:', editContent.trim());
+      console.log(`Saving edit for comment: ${comment.id}, content:`, editContent.trim());
       onEdit(comment.id, editContent.trim());
       setIsEditing(false);
     }
@@ -87,15 +90,21 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
   const handleReplySubmit = () => {
     if (replyContent.trim()) {
-      console.log('📝 Replying to comment:', comment.id, 'with content:', replyContent.trim());
-      // Pass the current comment's ID as the parentId
+      console.log(`Submitting reply for comment: ${comment.id}, content:`, replyContent.trim());
+      console.log(` Calling onReply with: commentId=${comment.id}, content=${replyContent.trim()}`);
+      
       onReply(comment.id, replyContent.trim());
+      
+      console.log(` onReply called, clearing form`);
       setReplyContent('');
       setShowReply(false);
+    } else {
+      console.log(`Reply content is empty, not submitting`);
     }
   };
 
   const handlePin = () => {
+    console.log(` Pin clicked for comment: ${comment.id}`);
     if (onPin) {
       onPin(comment.id);
     }
@@ -103,6 +112,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
   };
 
   const handleDelete = () => {
+    console.log(` Delete clicked for comment: ${comment.id}`);
     if (window.confirm('Are you sure you want to delete this comment?')) {
       onDelete(comment.id);
     }
@@ -110,7 +120,18 @@ const CommentCard: React.FC<CommentCardProps> = ({
   };
 
   const handleLikeClick = () => {
+    console.log(` Like clicked for comment: ${comment.id}`);
     onLike(comment.id);
+  };
+
+  const handleReplyButtonClick = () => {
+    console.log(` Reply button clicked for comment: ${comment.id}, current showReply: ${showReply}`);
+    setShowReply(!showReply);
+  };
+
+  const handleReplyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(` Typing reply for comment ${comment.id}:`, e.target.value);
+    setReplyContent(e.target.value);
   };
 
   const getUserInitial = () => {
@@ -244,7 +265,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             rows={2}
             value={editContent}
             onChange={(e) => {
-              console.log('✏️ Editing:', e.target.value);
+              console.log(' Editing:', e.target.value);
               setEditContent(e.target.value);
             }}
             size="small"
@@ -306,15 +327,11 @@ const CommentCard: React.FC<CommentCardProps> = ({
         <Button
           size="small"
           startIcon={<Reply />}
-          onClick={() => {
-            console.log('🔘 Reply button clicked for comment:', comment.id);
-            setShowReply(!showReply);
-          }}
+          onClick={handleReplyButtonClick}
         >
           Reply
         </Button>
       </Box>
-
 
       {showReply && (
         <Box sx={{ mt: 2 }}>
@@ -323,10 +340,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             size="small"
             placeholder={`Reply to ${getUserName()}...`}
             value={replyContent}
-            onChange={(e) => {
-              console.log('✏️ Typing reply to', comment.id, ':', e.target.value);
-              setReplyContent(e.target.value);
-            }}
+            onChange={handleReplyInputChange}
             multiline
             rows={2}
             variant="outlined"
@@ -344,6 +358,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             <Button
               size="small"
               onClick={() => {
+                console.log(` Cancel reply for comment: ${comment.id}`);
                 setShowReply(false);
                 setReplyContent('');
               }}
@@ -356,20 +371,23 @@ const CommentCard: React.FC<CommentCardProps> = ({
 
       {comment.replies && comment.replies.length > 0 && (
         <Box sx={{ mt: 2 }}>
-          {comment.replies.map((reply) => (
-            <CommentCard
-              key={reply.id}
-              comment={reply}
-              onLike={onLike}
-              onReply={onReply}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onPin={onPin}
-              currentUserId={currentUserId}
-              isPostAuthor={isPostAuthor}
-              level={level + 1}
-            />
-          ))}
+          {comment.replies.map((reply) => {
+            console.log(`🔄 Rendering nested reply: ${reply.id} under parent: ${comment.id}`);
+            return (
+              <CommentCard
+                key={reply.id}
+                comment={reply}
+                onLike={onLike}
+                onReply={onReply}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onPin={onPin}
+                currentUserId={currentUserId}
+                isPostAuthor={isPostAuthor}
+                level={level + 1}
+              />
+            );
+          })}
         </Box>
       )}
     </Paper>

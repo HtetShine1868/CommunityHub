@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Search, Add } from '@mui/icons-material';
 import { useTopics } from '../hooks/useTopics';
+import { useCategories } from '../hooks/useCategories';
 import { useAuthStore } from '../store/authStore';
 import { Topic } from '../types/topic.types';
 import TopicList from '../components/topics/TopicList';
@@ -19,18 +20,22 @@ import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TopicsPage: React.FC = () => {
-  const { topics, loading, error, createTopic, updateTopic, deleteTopic } = useTopics();
+  const { topics, loading: topicsLoading, error, createTopic, updateTopic, deleteTopic } = useTopics();
+  const { categories } = useCategories();
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
-  // Filter topics based on search
-  const filteredTopics = topics.filter(topic =>
-    topic.title.toLowerCase().includes(search.toLowerCase()) ||
-    (topic.description && topic.description.toLowerCase().includes(search.toLowerCase()))
-  );
+  // Filter topics based on search and category
+  const filteredTopics = topics.filter(topic => {
+    const matchesSearch = topic.title.toLowerCase().includes(search.toLowerCase()) ||
+      (topic.description && topic.description.toLowerCase().includes(search.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || topic.categoryId === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleEdit = (topicId: string) => {
     console.log('📝 Editing topic with ID:', topicId);
@@ -66,120 +71,87 @@ const TopicsPage: React.FC = () => {
     setCreateModalOpen(false);
   };
 
-  if (loading && topics.length === 0) {
+  if (topicsLoading && topics.length === 0) {
     return <LoadingSpinner message="Loading topics..." />;
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 8, bgcolor: 'background.default' }}>
-      {/* Hero Section */}
-      <Box sx={{ 
-        mb: 6, 
-        position: 'relative',
-        borderRadius: { xs: 0, md: '0 0 32px 32px' },
-        overflow: 'hidden',
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-        color: 'white',
-        boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.3)',
-      }}>
-        <Box sx={{
-          position: 'absolute',
-          top: 0, right: 0, bottom: 0, left: 0,
-          opacity: 0.4,
-          background: 'radial-gradient(circle at top right, rgba(56, 189, 248, 0.4), transparent 50%), radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.4), transparent 50%)',
-          pointerEvents: 'none',
-        }} />
-        <Container maxWidth="lg" sx={{ pt: { xs: 6, md: 10 }, pb: { xs: 6, md: 8 }, position: 'relative', zIndex: 1 }}>
-          <Typography variant="h3" gutterBottom sx={{ 
-            fontWeight: 800, 
-            letterSpacing: '-0.02em',
-            background: 'linear-gradient(to right, #fff, #cbd5e1)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 2
-          }}>
-            Explore Topics
-          </Typography>
-          <Typography variant="h6" sx={{ color: '#94a3b8', maxWidth: 600, mb: 5, fontWeight: 400, lineHeight: 1.6 }}>
-            Discover, discuss, and connect over subjects that matter to you. Find your community today.
-          </Typography>
+    <Container maxWidth="lg" sx={{ py: 4, minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700, mb: 1 }}>
+          Topics
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600 }}>
+          Discover, discuss, and connect over subjects that matter to you.
+        </Typography>
 
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
           <TextField
             fullWidth
-            placeholder="Search topics by name or description..."
+            placeholder="Search topics..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            sx={{ 
-              maxWidth: 700,
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(12px)',
-                color: 'white',
-                borderRadius: 3,
-                border: '1px solid rgba(255,255,255,0.15)',
-                transition: 'all 0.2s ease-in-out',
-                '& fieldset': { border: 'none' },
-                '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.12)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                },
-                '&.Mui-focused': {
-                  bgcolor: 'rgba(255, 255, 255, 0.15)',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                  boxShadow: '0 0 0 4px rgba(56, 189, 248, 0.15)',
-                }
-              },
-              '& .MuiInputBase-input::placeholder': {
-                color: 'rgba(255,255,255,0.5)',
-                opacity: 1,
-              }
-            }}
+            size="medium"
+            sx={{ flexGrow: 1, maxWidth: { md: 400 } }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search sx={{ color: 'rgba(255,255,255,0.6)' }} />
+                  <Search color="action" />
                 </InputAdornment>
               ),
             }}
           />
-        </Container>
-      </Box>
-
-      <Container maxWidth="lg">
-        {error && (
-          <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Content Section */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', letterSpacing: '-0.01em' }}>
-            {search ? 'Search Results' : 'All Topics'}
-          </Typography>
-          <Chip 
-            label={`${filteredTopics.length} topics`} 
-            size="small" 
-            sx={{ 
-              fontWeight: 600, 
-              bgcolor: 'primary.main', 
-              color: 'primary.contrastText',
-              borderRadius: '8px'
-            }} 
-          />
         </Box>
 
-        <TopicList
-          topics={filteredTopics}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          emptyMessage={
-            search 
-              ? `No topics matching "${search}"` 
-              : "No topics yet. Be the first to create one!"
-          }
-        />
-      </Container>
+        {/* Categories Filter */}
+        <Box sx={{ display: 'flex', gap: 1, mt: 3, flexWrap: 'wrap' }}>
+          <Chip
+            label="All Topics"
+            onClick={() => setSelectedCategory('all')}
+            color={selectedCategory === 'all' ? 'primary' : 'default'}
+            variant={selectedCategory === 'all' ? 'filled' : 'outlined'}
+            sx={{ fontWeight: selectedCategory === 'all' ? 600 : 400 }}
+          />
+          {categories.map((cat) => (
+            <Chip
+              key={cat.id}
+              icon={<span style={{ fontSize: '14px' }}>{cat.icon}</span>}
+              label={cat.name}
+              onClick={() => setSelectedCategory(cat.id)}
+              color={selectedCategory === cat.id ? 'primary' : 'default'}
+              variant={selectedCategory === cat.id ? 'filled' : 'outlined'}
+              sx={{ fontWeight: selectedCategory === cat.id ? 600 : 400 }}
+            />
+          ))}
+        </Box>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Content Section */}
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          {search || selectedCategory !== 'all' ? 'Filtered Results' : 'All Topics'}
+          <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+            ({filteredTopics.length})
+          </Typography>
+        </Typography>
+      </Box>
+
+      <TopicList
+        topics={filteredTopics}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        emptyMessage={
+          search || selectedCategory !== 'all'
+            ? "No topics match your filters."
+            : "No topics yet. Be the first to create one!"
+        }
+      />
 
       {/* FAB and Modals */}
       {isAuthenticated && (
@@ -220,7 +192,7 @@ const TopicsPage: React.FC = () => {
         topic={selectedTopic}
         onTopicUpdated={handleUpdateTopic}
       />
-    </Box>
+    </Container>
   );
 };
 

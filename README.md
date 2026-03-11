@@ -80,11 +80,11 @@ I understand every line of code in this project and Each line of code in this re
 
 **Purpose:** Research on how to deploy as this is my first time and remove models that i create intially which might need for some features but these features are not currently necessary for now so i remove these models 
 
-**Challenge faced**: First time of making deployment,and when i deploy frontend the size is larger that the free render can deploy 
+**Challenge faced**: First time of making deployment,and when i deploy frontend the size is larger than the free render can deploy 
 
 **Solution**
 - Removed unnecessary models (Follow, SavedPost, Notification) to simplify the database schema
-- Optimized frontend build by changing from using react to vite 
+- Optimized frontend build by switching from using react to vite 
 
 **How AI was used:** Asked about how to deploy  Go projects and React with Typescript. Researched about Render deployment limits and how to reduce bundle size.
 
@@ -113,8 +113,8 @@ Refactor the Topic Detail Page and improve post fetching logic.
 - Improved the usePosts hook to safely handle missing API data using fallback values.
 
 **How AI was used:**
-- Asked questions about best practices for **Material UI menus, responsive layouts.
-- Used AI  to research best practices for managing React state safely when data may be null. Also use ai as consultant to take guidance on improving the authentication hook structure and React data fetching patterns.
+- Asked questions about best practices for Material UI menus, responsive layouts.
+- Used AI  to research best practices for managing React state safely when data may be null. Also use ai as consultant to take guidance on improving the hook structure and React data fetching patterns.
 - Debug and make research on my code why the api return null 
 
 **Code written by me:**
@@ -141,7 +141,7 @@ Implement a complete **User Profile system** including profile display, editing 
 
 
 **How AI was used:**
-- Used AI tools to research best practices for **React component architecture, custom hooks for state managementapplications, and structuring profile-related API services
+- Used AI tools to research best practices for React component architecture, custom hooks for state managementapplications, and structuring profile-related API services
 - make review for my code and debug for the 500 errors why this happen not blindly copy and paste.
 
 **Code written by me:**

@@ -80,79 +80,102 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
 
   return (
     <Card
+      onClick={() => navigate(`/topics/${topic.id}`)}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
         position: 'relative',
-        overflow: 'visible',
-        transition: 'transform 0.2s, box-shadow 0.2s',
+        borderRadius: 4,
+        overflow: 'hidden',
+        background: theme.palette.background.paper,
+        boxShadow: theme.palette.mode === 'dark' 
+          ? '0 4px 6px -1px rgba(0, 0, 0, 0.5)' 
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: '1px solid',
+        borderColor: theme.palette.divider,
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: 4,
-          '& .topic-icon': {
+          boxShadow: `0 20px 25px -5px ${getTopicColor()}30, 0 8px 10px -6px ${getTopicColor()}20`,
+          borderColor: theme.palette.mode === 'dark' ? `${getTopicColor()}80` : `${getTopicColor()}50`,
+          '& .topic-icon-container': {
             transform: 'scale(1.1) rotate(5deg)',
           },
         },
       }}
-      onClick={() => navigate(`/topics/${topic.id}`)}
     >
       <Box
         sx={{
+          height: 80,
+          background: `lineargradient(135deg, ${getTopicColor()} 0%, ${getTopicColor()}dd 100%)`,
+          backgroundColor: getTopicColor(),
+          backgroundImage: `linear-gradient(135deg, ${getTopicColor()} 0%, ${getTopicColor()}99 100%)`,
+          position: 'relative',
+          opacity: 0.9,
+        }}
+      />
+      <Box
+        className="topic-icon-container"
+        sx={{
           position: 'absolute',
-          top: -20,
+          top: 50,
           left: 20,
           width: 60,
           height: 60,
-          borderRadius: '50%',
-          background: `linear-gradient(135deg, ${getTopicColor()} 0%, ${getTopicColor()}dd 100%)`,
+          borderRadius: 3,
+          background: theme.palette.background.paper,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: `0 10px 20px ${getTopicColor()}40`,
-          transition: 'transform 0.3s ease',
-          className: 'topic-icon',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          border: '2px solid',
+          borderColor: theme.palette.background.paper,
+          zIndex: 2,
         }}
       >
         {topic.icon ? (
-          <img src={topic.icon} alt={topic.title} style={{ width: 30, height: 30 }} />
+          <img src={topic.icon} alt={topic.title} style={{ width: 32, height: 32 }} />
         ) : (
-          <Forum sx={{ color: 'white', fontSize: 30 }} />
+          <Forum sx={{ color: getTopicColor(), fontSize: 32 }} />
         )}
       </Box>
 
-      <CardContent sx={{ pt: 6 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, pr: 4 }}>
+      <CardContent sx={{ pt: 5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, pr: 1, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
             {topic.title}
           </Typography>
           <Chip
-            icon={topic.isPrivate ? <Lock /> : <Public />}
+            icon={topic.isPrivate ? <Lock sx={{ fontSize: '14px !important' }} /> : <Public sx={{ fontSize: '14px !important' }} />}
             label={topic.isPrivate ? 'Private' : 'Public'}
             size="small"
             sx={{
-              backgroundColor: topic.isPrivate ? '#fee2e2' : '#e0f2fe',
-              color: topic.isPrivate ? '#b91c1c' : '#0369a1',
-              '& .MuiChip-icon': {
-                color: 'inherit',
-              },
+              height: 24,
+              backgroundColor: topic.isPrivate ? 'rgba(239, 68, 68, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+              color: topic.isPrivate ? (theme.palette.mode === 'dark' ? '#fca5a5' : '#ef4444') : (theme.palette.mode === 'dark' ? '#7dd3fc' : '#0ea5e9'),
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              '& .MuiChip-icon': { color: 'inherit' },
             }}
           />
         </Box>
 
-        {/* Category Chip */}
         {topic.category && (
-          <Box sx={{ mb: 1 }}>
+          <Box sx={{ mb: 1.5 }}>
             <Chip
-              icon={<span>{topic.category.icon || '📁'}</span>}
+              icon={<span style={{ fontSize: '12px' }}>{topic.category.icon || '📁'}</span>}
               label={topic.category.name}
               size="small"
-              variant="outlined"
               sx={{
-                backgroundColor: topic.category.color ? `${topic.category.color}20` : 'transparent',
-                borderColor: topic.category.color || theme.palette.primary.main,
-                color: topic.category.color || theme.palette.primary.main,
+                height: 22,
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                backgroundColor: topic.category.color ? `${topic.category.color}15` : theme.palette.action.hover,
+                color: topic.category.color || theme.palette.text.secondary,
+                border: 'none',
               }}
             />
           </Box>
@@ -167,65 +190,85 @@ const TopicCard: React.FC<TopicCardProps> = ({ topic, onEdit, onDelete }) => {
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            height: 40,
+            lineHeight: 1.6,
+            flexGrow: 1,
+            minHeight: 44,
           }}
         >
           {topic.description || 'No description provided.'}
         </Typography>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Forum fontSize="small" color="action" />
-            <Typography variant="caption" color="text.secondary">
-              {topic.postCount || 0} {topic.postCount === 1 ? 'post' : 'posts'}
-            </Typography>
+        <Box sx={{ mt: 'auto' }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: 'text.secondary' }}>
+              <Forum sx={{ fontSize: 18 }} />
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                {topic.postCount || 0}
+              </Typography>
+            </Box>
+            {topic.followerCount !== undefined && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, color: 'text.secondary' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                  {topic.followerCount} followers
+                </Typography>
+              </Box>
+            )}
           </Box>
-        </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Avatar
-              src={topic.user?.avatar}
-              sx={{ width: 24, height: 24 }}
-            >
-              {getUserInitial()}
-            </Avatar>
-            <Typography variant="caption" color="text.secondary">
-              by {getUserDisplay()}
-            </Typography>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            pt: 2, 
+            borderTop: '1px solid', 
+            borderColor: theme.palette.divider 
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar
+                src={topic.user?.avatar}
+                sx={{ width: 28, height: 28, border: '2px solid', borderColor: 'background.paper' }}
+              >
+                {getUserInitial()}
+              </Avatar>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {getUserDisplay()}
+              </Typography>
+            </Box>
+            
+            {canEdit && (
+              <Box onClick={(e) => e.stopPropagation()}>
+                <IconButton 
+                  size="small" 
+                  onClick={handleMenuOpen}
+                  sx={{ 
+                    color: 'text.secondary',
+                    '&:hover': { bgcolor: 'action.hover', color: 'primary.main' }
+                  }}
+                >
+                  <MoreVert fontSize="small" />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                  onClick={(e) => e.stopPropagation()}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  PaperProps={{
+                    elevation: 3,
+                    sx: { borderRadius: 2, mt: 0.5, minWidth: 120 }
+                  }}
+                >
+                  <MenuItem onClick={handleEdit} sx={{ fontSize: '0.875rem' }}>
+                    <Edit fontSize="small" sx={{ mr: 1.5, color: 'text.secondary' }} /> Edit
+                  </MenuItem>
+                  <MenuItem onClick={handleDelete} sx={{ fontSize: '0.875rem', color: 'error.main' }}>
+                    <Delete fontSize="small" sx={{ mr: 1.5, color: 'inherit' }} /> Delete
+                  </MenuItem>
+                </Menu>
+              </Box>
+            )}
           </Box>
-          
-          {canEdit && (
-            <>
-              <IconButton 
-                size="small" 
-                onClick={handleMenuOpen}
-                aria-label="topic options"
-              >
-                <MoreVert fontSize="small" />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-              >
-                <MenuItem onClick={handleEdit}>
-                  <Edit fontSize="small" sx={{ mr: 1 }} /> Edit
-                </MenuItem>
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                  <Delete fontSize="small" sx={{ mr: 1 }} /> Delete
-                </MenuItem>
-              </Menu>
-            </>
-          )}
         </Box>
       </CardContent>
     </Card>

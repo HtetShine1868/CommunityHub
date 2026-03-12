@@ -165,3 +165,5 @@ The Topics page filtering didn’t really cut it, either. Searching and picking 
 
 **Solution:** On the Topics page, we made the search bar and category picker way more user-friendly. Now they use Material UI’s Select, MenuItem, and FormControl components.
 Filtering logic is simpler, too. You can search by keyword or pick a category, and the results update quickly.
+
+-----

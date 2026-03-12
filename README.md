@@ -154,7 +154,7 @@ AI Tools Used: Deepseek and ChatGPT
 ---
 
 #### Commit: Add the filter by category in topic page 
-Date: 6 March 2026  
+Date: 11 March 2026  
 AI Tools Used: Deepseek and ChatGPT
 
 **Purpose:** To enhance the user experience i add search topic by its category so now user can search topic not only by its name but also by its category

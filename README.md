@@ -150,3 +150,15 @@ AI Tools Used: Deepseek and ChatGPT
 **Challenge:** To add new features, I had to put category data into the topic structure, but I couldn't change the API responses that were already there. So I changed the TypeScript types to allow for optional category relationships. It was also hard to show category information in the UI. It had to fit with the Material UI design, but not every topic has a category. I made sure that those edge cases didn't break anything.
 
 **Solution:** I adjusted the Topic and Post interfaces in TypeScript so they support categories which makes ux more flexible. On the backend, I set up a foreign key so every Topic links to a Category, no confusion there. Cleaned up the topic repository too, so fetching topics actually brings in the right category info.
+
+---
+
+#### Commit: Add the filter by category in topic page 
+Date: 6 March 2026  
+AI Tools Used: Deepseek and ChatGPT
+
+**Purpose:** To enhance the user experience i add search topic by its category so now user can search topic not only by its name but also by its category
+
+**Challenge:** 
+
+**Solution:** 

@@ -106,7 +106,7 @@ I wanted to fix the post fetching logic, clean up the code, and enhance the Topi
 - Making sure pagination and post counts worked right from the backend.
 
 **Solution:**
-- Built a dropdown actions menu using MUI Menu, MenuItem, and IconButton.
+-Built a dropdown actions menu using MUI Menu, MenuItem, and IconButton.
 -The frontend crash was prevented by fixing the backend structure to return an empty array for posts rather than nil.
 - Improved the usePosts hook to handle missing API data safely by using fallback values.
 
@@ -131,8 +131,7 @@ Built a full User Profile system—profile display, editing, and tabs for activi
 - Fetching user data and the total  posts created in topic from the backend, and showing the total posts amount on the frontend.
 -I broke the profile system down into clean, reusable parts and hooks, so it’s way easier to manage now. When I ran into those 500 errors, I didn’t just slap on random fixes. I dug into the code, used AI to help me figure out what was really going wrong, and got to the bottom of the issue.
 
-**Solution:**
--Before connecting the frontend, I ran the backend API through Postman to make sure everything worked. Built a custom useProfile hook to wrangle profile state, API calls, and pagination. Pulled all the profile-related API requests into a dedicated profileService. Keeps things tidy.
+**Solution:**Before connecting the frontend, I ran the backend API through Postman to make sure everything worked. Built a custom useProfile hook to wrangle profile state, API calls, and pagination. Pulled all the profile-related API requests into a dedicated profileService. Keeps things tidy.
 
 
 **How AI was used:**
@@ -148,11 +147,9 @@ I wrote the code for all the parts, hooks, API services, state management logic,
 Date: 6 March 2026  
 AI Tools Used: Deepseek and ChatGPT
 
-**Purpose:**
-The frontend user interface was updated to display category information using visual chips, and category support was added to topics. Topics are now more arranged, and users can quickly view categories and privacy status.
+**Purpose:**The frontend user interface was updated to display category information using visual chips, and category support was added to topics. Topics are now more arranged, and users can quickly view categories and privacy status.
 
-**Challenge:**
--To add new features, I had to put category data into the topic structure, but I couldn't change the API responses that were already there. So I changed the TypeScript types to allow for optional category relationships. It was also hard to show category information in the UI. It had to fit with the Material UI design, but not every topic has a category. I made sure that those edge cases didn't break anything.
+**Challenge:**To add new features, I had to put category data into the topic structure, but I couldn't change the API responses that were already there. So I changed the TypeScript types to allow for optional category relationships. It was also hard to show category information in the UI. It had to fit with the Material UI design, but not every topic has a category. I made sure that those edge cases didn't break anything.
 
 **Solution:**
 - I adjusted the Topic and Post interfaces in TypeScript so they support categories—makes things more flexible. On the backend, I set up a foreign key so every Topic links to a Category, no confusion there. Cleaned up the topic repository too, so fetching topics actually brings in the right category info.

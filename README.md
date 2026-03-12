@@ -67,7 +67,7 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 I understand every part of this codebase. I reviewed and wrote every line myself. I used AI tools only for research, code review, and troubleshooting—not to generate the code.
 
 ### AI Tools Used
-- Github: I used it for research, getting feedback on my code structure, and debugging.
+- Chatgpt: I used it for research, getting feedback on my code structure, and debugging.
 - Deepseek: Assisted me in reviewing my code, investigating solutions, and debugging complex errors
 
  ### AI Usage Declaration - Commit by Commit

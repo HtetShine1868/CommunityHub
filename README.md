@@ -74,7 +74,7 @@ I understand every part of this codebase. I reviewed and wrote every line myself
  ### AI Usage Declaration - Commit by Commit
 
 #### Commit: fix the migration and setup for deployment  
-Date: March 1, 2026  
+Date: 1 March 2026  
 AI Tool Used: ChatGPT, Deepseek
 
 **Purpose:**
@@ -120,7 +120,7 @@ I wanted to fix the post fetching logic, clean up the code, and enhance the Topi
 ---
 
 #### Commit: implement user profile system to work with backend  
-Date: March 5, 2026  
+Date:5 March 2026  
 AI Tool Used: ChatGPT, Deepseek
 
 **Purpose:**

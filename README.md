@@ -62,151 +62,99 @@ Community Hub is a full-stack web forum application built for the CVWO assignmen
 - npm run dev
 
 ---
-
 ## AI Usage Declaration
 
 ### Code Ownership & AI Usage
-I understand every line of code in this project and Each line of code in this repository has been thoroughly reviewed and implemented by me; AI was used strictly for research,review the code  and troubleshooting, not as a code generator.
+I understand every part of this codebase. I reviewed and wrote every line myself. I used AI tools only for research, code review, and troubleshooting—not to generate the code.
 
-### Ai tools Used
-- Github -used this for research,getting feedback on my code structre and also use this for debugging 
-- Deepseek -used this for debugging tricky error,reserch and review my code
+### AI Tools Used
+- Github: I used it for research, getting feedback on my code structure, and debugging.
+- Deepseek: Assisted me in reviewing my code, investigating solutions, and debugging complex errors
 
-### AI Usage Declaration - Commit by Commit
+ ### AI Usage Declaration - Commit by Commit
 
-#### Commit: `fix the migration and setup for deployment`
-**Date:** March 1, 2026  
-**AI Tool Used:** ChatGPT,Deepseek 
-
-**Purpose:** Research on how to deploy as this is my first time and remove models that i create intially which might need for some features but these features are not currently necessary for now so i remove these models 
-
-**Challenge faced**: First time of making deployment,and when i deploy frontend the size is larger than the free render can deploy 
-
-**Solution**
-- Removed unnecessary models (Follow, SavedPost, Notification) to simplify the database schema
-- Optimized frontend build by switching from using react to vite 
-
-**How AI was used:** Asked about how to deploy  Go projects and React with Typescript. Researched about Render deployment limits and how to reduce bundle size.
-
-**Code written by me:** All initial configuration files and boilerplate code 
-
----
-
-#### Commit: `improve topic detail page UI and backend post count fetching error `
-**Date:** March 4, 2026  
-**AI Tool Used:** ChatGPT,Deepseek 
+#### Commit: fix the migration and setup for deployment  
+Date: March 1, 2026  
+AI Tool Used: ChatGPT, Deepseek
 
 **Purpose:**
-Improve the Topic Detail Page UI and by adding a responsive actions menu.
-Refactor the Topic Detail Page and improve post fetching logic.
+I needed to figure out deployment steps (first time doing this) and clean up the project by removing some models I originally created. These models were for features I don’t need right now, so I took them out.
 
-
-**Challenge faced:**
-- Making the page responsive for both desktop and mobile screens.
-- Handling API responses where posts is returning  null, causing rendering issues in React.
-- Managing pagination and total counts correctly from backend responses.
+**Challenge:**
+I had never deployed a project before. I immediately encountered difficulties because, as it turned out, the frontend bundle was far too large for the free Render plan.
 
 **Solution:**
+I removed the unused models from the code to clean code and consistent the databse.To deploy my frontend on free render, I changed the frontend build from Create React App (CRA) to Vite.
 
-- Implemented a dropdown actions menu using **MUI Menu, MenuItem, and IconButton**.
-- Updated backend logic to ensure posts return an empty array instead of nil to prevent frontend crashes.
-- Improved the usePosts hook to safely handle missing API data using fallback values.
-
-**How AI was used:**
-- Asked questions about best practices for Material UI menus, responsive layouts.
-- Used AI  to research best practices for managing React state safely when data may be null. Also use ai as consultant to take guidance on improving the hook structure and React data fetching patterns.
-- Debug and make research on my code why the api return null 
+**How AI was used:**  
+I asked about how to deploy Go projects and React with TypeScript, looked up Render’s deployment limits, and searched for ways to reduce bundle size.
 
 **Code written by me:**
-All component logic, responsive styling, and integration with existing topic and post services.
+All the configuration files and boilerplate—everything hands-on.
 
 ---
 
-#### Commit: `implement user profile system to work with backend `
-**Date:** March 5, 2026  
-**AI Tool Used:** ChatGPT,Deepseek 
+#### Commit: Fix the backend post count fetching error and topic detail page user interface  
+Date: 4 March 2026  
+AI Tools Used: Deepseek and ChatGPT
 
-**Purpose:**
-Implement a complete **User Profile system** including profile display, editing functionality, and profile activity tabs such as posts
+**Purpose:** 
+I wanted to fix the post fetching logic, clean up the code, and enhance the Topic Detail Page user interface with a responsive actions
 
-**Challenge faced:**
-- fetching user and users posts data from backend and show on frontend
-- Structuring the profile system into reusable components and hooks while keeping the code maintainable.
+**Challenge:**
+- 
+- Fixing issues where the API sent back null for total amount of posts, which broke the React rendering.
+- Making sure pagination and post counts worked right from the backend.
 
 **Solution:**
-
-- first test the backend api to make sure it actually work by testing the api using postmen and then after it work i fetch from the frontend.
-- Implemented a custom useProfile hook to manage profile state, API calls, and pagination logic.
-- Added profileService to centralize all profile-related API requests.
-
+- Built a dropdown actions menu using MUI Menu, MenuItem, and IconButton.
+-The frontend crash was prevented by fixing the backend structure to return an empty array for posts rather than nil.
+- Improved the usePosts hook to handle missing API data safely by using fallback values.
 
 **How AI was used:**
-- Used AI tools to research best practices for React component architecture, custom hooks for state managementapplications, and structuring profile-related API services
-- make review for my code and debug for the 500 errors why this happen not blindly copy and paste.
+- Looked up best practices for Material UI menus and responsive layouts.
+- Searched for safe state management in React when API data is sometimes null. Used AI as a consultant for improving authentication hooks and data fetching patterns.
+- Debugged why the API was returning null.
 
-**Code written by me:**
-All components, hooks, API services, state management logic, UI layout, and integration with backend profile endpoints were implemented.
+**Code written by me: ** 
+-All the component logic, responsive styling, and tying everything into the existing topic and post services.
 
 ---
 
-#### Commit: `add category support to topics and update topic UI with category fields`
+#### Commit: implement user profile system to work with backend  
+Date: March 5, 2026  
+AI Tool Used: ChatGPT, Deepseek
 
-**Date:** March 6, 2026  
-**AI Tool Used:** ChatGPT,Deepseek 
+**Purpose: **
+Built a full User Profile system—profile display, editing, and tabs for activity like posts.
 
-**Purpose:**
-Introduce category support for topics and update the frontend UI to display category information using visual chips. This update improves topic organization and enhances the user interface by clearly showing topic categories and privacy status.
-
-**Challenge faced:**
-
-- Integrating category data into the existing topic structure without breaking existing API responses.
-- Updating TypeScript types to correctly support optional category relationships.
-- Displaying category information in the UI while maintaining consistent styling with Material UI components.
-- Handling cases where topics might not have a category assigned.
+**Challenge:**
+- Fetching user data and the total  posts created in topic from the backend, and showing the total posts amount on the frontend.
+-I broke the profile system down into clean, reusable parts and hooks, so it’s way easier to manage now. When I ran into those 500 errors, I didn’t just slap on random fixes. I dug into the code, used AI to help me figure out what was really going wrong, and got to the bottom of the issue.
 
 **Solution:**
+-Before connecting the frontend, I ran the backend API through Postman to make sure everything worked. Built a custom useProfile hook to wrangle profile state, API calls, and pagination. Pulled all the profile-related API requests into a dedicated profileService. Keeps things tidy.
 
-- Updated Topic and Post TypeScript interfaces to include optional category relationships.
-- Modified backend Topic model to include a `Category` relationship using a foreign key.
-- updated the topic repository to correctly manage topic retrieval and relationships.
-- Enhanced TopicCard and TopicDetailPage components to display category information using styled Material UI Chips with category icons and colors.
-- Implemented conditional rendering to ensure the category chip only appears when a category exists.
-- Organized UI elements so that category and privacy chips are displayed together in a responsive layout.
 
 **How AI was used:**
-Used AI tools to research best practices for handling optional relational data in TypeScript interfaces, structuring React components with Material UI chips, and managing foreign key relationships in Go using GORM.
+- Researched best practices for React component architecture, custom hooks, and structuring profile-related API services.
+- Used AI to review my code and make research about the errors 
 
-**Code written by me:**
-All backend model updates, repository adjustments, frontend component changes, TypeScript type definitions, and UI integration were implemented and tested by me.
+**Code written by me: **
+I wrote the code for all the parts, hooks, API services, state management logic, UI layout, and backend integration.
 
 ---
 
-#### Commit: fix comment replies editing and deletion affecting main comment
-
-**Date:** March 7 to 8,2026
-
-**AI Tool Used:** ChatGPT,DeepSeek
+#### Commit: Update the topic user interface with category fields and add category support to topics  
+Date: 6 March 2026  
+AI Tools Used: Deepseek and ChatGPT
 
 **Purpose:**
-Fix the issue where editing or deleting a reply incorrectly affected the main/top-level comment and where replies displayed their UUID instead of the actual text. Ensured that all comment actions (edit, delete, like, reply) correctly work on nested replies without interfering with other comments.
+The frontend user interface was updated to display category information using visual chips, and category support was added to topics. Topics are now more arranged, and users can quickly view categories and privacy status.
 
-**Challenge faced:**
-
-- Recursive functions (updateInTree, removeFromTree) were only handling top-level comments, so nested replies were not updated properly.
-- Editing a reply would sometimes replace the top-level comment content with a UUID instead of the new text.
-- Delete actions on replies affected the main comment because the reply list was not correctly traversed.
-- The frontend CommentCard and CommentSection needed adjustments to pass the correct comment ID for reply actions.
+**Challenge:**
+-
+To add new features, I had to put category data into the topic structure, but I couldn't change the API responses that were already there. So I changed the TypeScript types to allow for optional category relationships. It was also hard to show category information in the UI. It had to fit with the Material UI design, but not every topic has a category. I made sure that those edge cases didn't break anything.
 
 **Solution:**
-
-- Updated CommentCard to always pass the comment.id when calling onEdit, onDelete, onReply, onPin, and onLike.
-- Enhanced useComments hook with properly recursive functions for updating and deleting nested comments:
-- Added logging in CommentCard for editing and reply actions to verify correct IDs and text values.
-- Ensured nested replies are indented correctly and maintain separation from top-level comments.
-
-**How AI was used:**
-Used AI tools to research best practices for handling recursive updates in React state, managing nested data structures in TypeScript, and debugging common issues with comment threads in frontend applications.
-
-
-
-
+- I adjusted the Topic and Post interfaces in TypeScript so they support categories—makes things more flexible. On the backend, I set up a foreign key so every Topic links to a Category, no confusion there. Cleaned up the topic repository too, so fetching topics actually brings in the right category info.

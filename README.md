@@ -115,8 +115,7 @@ I wanted to fix the post fetching logic, clean up the code, and enhance the Topi
 - Searched for safe state management in React when API data is sometimes null. Used AI as a consultant for improving authentication hooks and data fetching patterns.
 - Debugged why the API was returning null.
 
-**Code written by me:** 
-- All the component logic, responsive styling, and tying everything into the existing topic and post services.
+**Code written by me:** All the component logic, responsive styling, and tying everything into the existing topic and post services.
 
 ---
 
@@ -138,8 +137,7 @@ Built a full User Profile system—profile display, editing, and tabs for activi
 - Researched best practices for React component architecture, custom hooks, and structuring profile-related API services.
 - Used AI to review my code and make research about the errors 
 
-**Code written by me:**
-- I wrote the code for all the parts, hooks, API services, state management logic, UI layout, and backend integration.
+**Code written by me:** I wrote the code for all the parts, hooks, API services, state management logic, UI layout, and backend integration.
 
 ---
 

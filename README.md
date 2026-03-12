@@ -102,7 +102,6 @@ AI Tools Used: Deepseek and ChatGPT
 I wanted to fix the post fetching logic, clean up the code, and enhance the Topic Detail Page user interface with a responsive actions
 
 **Challenge:**
-- 
 - Fixing issues where the API sent back null for total amount of posts, which broke the React rendering.
 - Making sure pagination and post counts worked right from the backend.
 

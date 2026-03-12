@@ -159,6 +159,9 @@ AI Tools Used: Deepseek and ChatGPT
 
 **Purpose:** To enhance the user experience i add search topic by its category so now user can search topic not only by its name but also by its category
 
-**Challenge:** 
+**Challenge:** The old TopicCard was a bit of a mess. Too many helper functions did basically the same thing, and the UI logic got tangled up, so it was tough to work with and hard to read.
+Some of the UI parts—icons, headers, category tags—needed a better layout. We wanted it to look cleaner, but it still had to work with our current data setup.
+The Topics page filtering didn’t really cut it, either. Searching and picking categories was clunky, and the interface just didn’t feel responsive enough.
 
-**Solution:** 
+**Solution:** On the Topics page, we made the search bar and category picker way more user-friendly. Now they use Material UI’s Select, MenuItem, and FormControl components.
+Filtering logic is simpler, too. You can search by keyword or pick a category, and the results update quickly.

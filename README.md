@@ -5,7 +5,6 @@
 
 ## Student Information
 **Name:** Htet Aung Shine  
-**Matriculation Number:** TNT-2134
 
 ## Project Overview
 Community Hub is a full-stack web forum application built for the CVWO assignment. It allows users to create topics, post discussions, comment on posts, and interact with content through likes and pins. The application features a React frontend with TypeScript and a Go backend with PostgreSQL database.

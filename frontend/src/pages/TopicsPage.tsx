@@ -24,7 +24,7 @@ import EditTopicModal from '../components/topics/EditTopicModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const TopicsPage: React.FC = () => {
-  const { topics, loading: topicsLoading, error, createTopic, deleteTopic } = useTopics();
+  const { topics, loading: topicsLoading, error, createTopic, updateTopic, deleteTopic } = useTopics();
   const { categories } = useCategories();
   const { isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState('');
@@ -56,7 +56,14 @@ const TopicsPage: React.FC = () => {
     }
   };
 
-  const handleUpdateTopic = async (_updatedTopic: Topic) => {
+  const handleUpdateTopic = async (updatedTopic: Topic) => {
+    // Sync the updated topic into local state so the list reflects changes immediately
+    await updateTopic(updatedTopic.id, {
+      title: updatedTopic.title,
+      description: updatedTopic.description,
+      color: updatedTopic.color,
+      isPrivate: updatedTopic.isPrivate,
+    });
     setEditModalOpen(false);
     setSelectedTopic(null);
   };
